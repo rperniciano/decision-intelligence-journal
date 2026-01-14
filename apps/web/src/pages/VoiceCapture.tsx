@@ -2,13 +2,14 @@
  * VoiceCapture page component
  *
  * Main page for voice recording that orchestrates the full recording flow.
- * States: Idle → Recording → Preview → Confirm
+ * States: Idle → Recording → Preview → Uploading → Transcribing → Complete/Error
  *
  * Features:
  * - Full-screen minimal UI with centered recording interface
  * - Permission handling with helpful error messages
  * - Recording duration timer
  * - Audio preview with playback and actions
+ * - Upload progress and transcription status
  * - "Semi-closed eyes" design for minimal distraction
  */
 
@@ -20,12 +21,38 @@ import {
   AudioPreview,
   PermissionError,
 } from '../components/voice';
+import TranscriptEditor from '../components/TranscriptEditor';
 import type { PermissionErrorType } from '../components/voice/PermissionError';
 
 /**
  * Recording flow states
+ * Extended to include upload/transcription states
  */
-type RecordingFlowState = 'idle' | 'recording' | 'preview';
+type RecordingFlowState =
+  | 'idle'
+  | 'recording'
+  | 'preview'
+  | 'uploading'
+  | 'transcribing'
+  | 'complete'
+  | 'error';
+
+/**
+ * Transcription result from the backend API
+ */
+interface TranscriptionResult {
+  decisionId: string;
+  transcript: string;
+  audioUrl: string;
+}
+
+/**
+ * Upload error with user-friendly message
+ */
+interface UploadError {
+  code: string;
+  message: string;
+}
 
 /**
  * Map error types from the hook to PermissionError component types
@@ -61,6 +88,7 @@ export default function VoiceCapture() {
   const {
     isRecording,
     duration,
+    audioBlob,
     audioUrl,
     error,
     permissionState,
@@ -69,12 +97,34 @@ export default function VoiceCapture() {
     resetRecording,
   } = useVoiceRecorder();
 
-  const [isConfirming, setIsConfirming] = useState(false);
+  // Upload/transcription flow state
+  const [uploadFlowState, setUploadFlowState] = useState<
+    'idle' | 'uploading' | 'transcribing' | 'complete' | 'error'
+  >('idle');
+  const [transcriptionResult, setTranscriptionResult] =
+    useState<TranscriptionResult | null>(null);
+  const [uploadError, setUploadError] = useState<UploadError | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   /**
-   * Determine the current flow state based on recording state
+   * Determine the current flow state based on recording and upload state
    */
   const getFlowState = useCallback((): RecordingFlowState => {
+    // Upload/transcription states take priority
+    if (uploadFlowState === 'uploading') {
+      return 'uploading';
+    }
+    if (uploadFlowState === 'transcribing') {
+      return 'transcribing';
+    }
+    if (uploadFlowState === 'complete') {
+      return 'complete';
+    }
+    if (uploadFlowState === 'error') {
+      return 'error';
+    }
+
+    // Recording states
     if (audioUrl) {
       return 'preview';
     }
@@ -82,7 +132,7 @@ export default function VoiceCapture() {
       return 'recording';
     }
     return 'idle';
-  }, [audioUrl, isRecording]);
+  }, [audioUrl, isRecording, uploadFlowState]);
 
   const flowState = getFlowState();
 
@@ -107,26 +157,117 @@ export default function VoiceCapture() {
   }, [resetRecording]);
 
   /**
-   * Handle confirm action
-   * For now, logs confirmation (future: save to backend)
+   * Handle confirm action - triggers upload and transcription flow
+   * Sends FormData to backend endpoint for transcription
    */
   const handleConfirm = useCallback(async () => {
-    setIsConfirming(true);
-    try {
-      // Future integration point: save audio to backend
-      // For now, just log the confirmation
-      // eslint-disable-next-line no-console
-      console.log('Recording confirmed', { duration, audioUrl });
-
-      // Simulate async operation
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Reset after confirmation
-      resetRecording();
-    } finally {
-      setIsConfirming(false);
+    if (!audioBlob) {
+      return;
     }
-  }, [duration, audioUrl, resetRecording]);
+
+    // Reset any previous upload state
+    setUploadError(null);
+    setTranscriptionResult(null);
+
+    // Start upload flow
+    setUploadFlowState('uploading');
+
+    try {
+      // Create FormData with the audio blob
+      const formData = new FormData();
+      const audioFile = new File([audioBlob], 'recording.webm', {
+        type: audioBlob.type || 'audio/webm',
+      });
+      formData.append('audio', audioFile);
+
+      // Get API URL from environment
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (!apiUrl) {
+        throw new Error('API URL not configured');
+      }
+
+      // Transition to transcribing state when upload is sent
+      // Note: The actual upload and transcription happen in one request
+      // but we show "transcribing" after the request is made
+      setUploadFlowState('transcribing');
+
+      // Send POST request to backend
+      const response = await fetch(`${apiUrl}/decisions/voice`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      // Parse response
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response from backend
+        const errorData = data as { code?: string; message?: string };
+        throw new Error(errorData.message || 'Upload failed');
+      }
+
+      // Success - store transcription result
+      const result = data as { decisionId: string; transcript: string; audioUrl: string };
+      setTranscriptionResult({
+        decisionId: result.decisionId,
+        transcript: result.transcript,
+        audioUrl: result.audioUrl,
+      });
+      setUploadFlowState('complete');
+    } catch (err) {
+      // Handle errors
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setUploadError({
+        code: 'UPLOAD_ERROR',
+        message: errorMessage,
+      });
+      setUploadFlowState('error');
+    }
+  }, [audioBlob]);
+
+  /**
+   * Handle retry from error state
+   * Returns to idle state for a new recording
+   */
+  const handleRetryFromError = useCallback(() => {
+    setUploadFlowState('idle');
+    setUploadError(null);
+    resetRecording();
+  }, [resetRecording]);
+
+  /**
+   * Handle retry from complete state
+   * Returns to idle state for a new recording
+   */
+  const handleRetryFromComplete = useCallback(() => {
+    setUploadFlowState('idle');
+    setTranscriptionResult(null);
+    resetRecording();
+  }, [resetRecording]);
+
+  /**
+   * Handle save transcript action
+   * Placeholder for saving edited transcript to backend
+   */
+  const handleSaveTranscript = useCallback(
+    async (editedTranscript: string) => {
+      setIsSaving(true);
+      try {
+        // TODO: Implement actual save to backend
+        // For now, just log the save action
+        // This will be implemented when we add transcript editing feature
+        void editedTranscript;
+
+        // After saving, reset to idle for new recording
+        setUploadFlowState('idle');
+        setTranscriptionResult(null);
+        resetRecording();
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [resetRecording]
+  );
 
   /**
    * Check if we should show an error state
@@ -253,9 +394,116 @@ export default function VoiceCapture() {
               audioUrl={audioUrl}
               onDelete={handleDelete}
               onConfirm={handleConfirm}
-              isConfirming={isConfirming}
+              isConfirming={uploadFlowState === 'uploading'}
             />
           </>
+        )}
+
+        {/* Uploading state - sending audio to backend */}
+        {flowState === 'uploading' && (
+          <div className="flex flex-col items-center gap-6" role="status" aria-live="polite">
+            {/* Spinner */}
+            <div className="w-16 h-16 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin" />
+
+            {/* Status text */}
+            <div className="text-center">
+              <h2 className="text-lg font-medium text-slate-200">
+                Uploading...
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">
+                Sending your recording to the server
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Transcribing state - waiting for transcription */}
+        {flowState === 'transcribing' && (
+          <div className="flex flex-col items-center gap-6" role="status" aria-live="polite">
+            {/* Spinner */}
+            <div className="w-16 h-16 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin" />
+
+            {/* Status text */}
+            <div className="text-center">
+              <h2 className="text-lg font-medium text-slate-200">
+                Transcribing...
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">
+                Converting your voice to text
+              </p>
+              <p className="text-slate-500 text-xs mt-2">
+                This may take a minute
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Complete state - show transcript editor */}
+        {flowState === 'complete' && transcriptionResult && (
+          <TranscriptEditor
+            transcript={transcriptionResult.transcript}
+            onSave={handleSaveTranscript}
+            onRetry={handleRetryFromComplete}
+            isSaving={isSaving}
+          />
+        )}
+
+        {/* Error state - upload or transcription failed */}
+        {flowState === 'error' && uploadError && (
+          <div className="flex flex-col items-center gap-6 w-full max-w-md">
+            {/* Error icon */}
+            <div className="w-16 h-16 rounded-full bg-red-900/50 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-8 h-8 text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </div>
+
+            {/* Error message */}
+            <div className="text-center">
+              <h2 className="text-lg font-medium text-slate-200">
+                Something went wrong
+              </h2>
+              <p className="text-slate-400 text-sm mt-1">
+                {uploadError.message}
+              </p>
+            </div>
+
+            {/* Retry button */}
+            <button
+              type="button"
+              onClick={handleRetryFromError}
+              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Try Again
+            </button>
+          </div>
         )}
       </main>
 
@@ -266,7 +514,15 @@ export default function VoiceCapture() {
             ? 'Recording continues even if you switch tabs'
             : flowState === 'preview'
               ? 'You can delete and try again if needed'
-              : 'Max recording time: 5 minutes'}
+              : flowState === 'uploading'
+                ? 'Please wait while we upload your recording'
+                : flowState === 'transcribing'
+                  ? 'Transcription usually takes 30-60 seconds'
+                  : flowState === 'complete'
+                    ? 'You can edit the transcript before saving'
+                    : flowState === 'error'
+                      ? 'Your original recording is preserved'
+                      : 'Max recording time: 5 minutes'}
         </p>
       </footer>
     </div>

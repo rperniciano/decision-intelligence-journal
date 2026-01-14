@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import healthRoutes from './health.js';
+import decisionsRoutes from './decisions.js';
 
 /**
  * Main routes plugin
@@ -14,10 +15,12 @@ async function routes(
   // Register health check routes
   await fastify.register(healthRoutes);
 
+  // Register decisions routes with /decisions prefix
+  await fastify.register(decisionsRoutes, { prefix: '/decisions' });
+
   // Future routes will be registered here:
-  // await fastify.register(decisionsRoutes, { prefix: '/decisions' });
   // await fastify.register(categoriesRoutes, { prefix: '/categories' });
 }
 
 export default routes;
-export { healthRoutes };
+export { healthRoutes, decisionsRoutes };
