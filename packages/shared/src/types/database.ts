@@ -4,7 +4,7 @@
  */
 
 // Enum types - using union types for better TypeScript inference
-export type DecisionStatus = 'in_progress' | 'decided' | 'abandoned';
+export type DecisionStatus = 'in_progress' | 'processing' | 'decided' | 'abandoned';
 export type DecisionOutcome = 'better' | 'as_expected' | 'worse';
 export type EmotionalState =
   | 'confident'
