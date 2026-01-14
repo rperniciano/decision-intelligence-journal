@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import routes from './routes/index.js';
 
 // Environment configuration
@@ -28,6 +29,13 @@ await server.register(cors, {
   origin: process.env.CORS_ORIGIN || true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+});
+
+// Register multipart plugin for file uploads (50MB limit)
+await server.register(multipart, {
+  limits: {
+    fileSize: 52428800, // 50MB in bytes
+  },
 });
 
 // Register API routes
