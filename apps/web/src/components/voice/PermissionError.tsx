@@ -5,6 +5,8 @@
  * with helpful instructions and a retry button.
  */
 
+import type { FC } from 'react';
+
 /** Type of permission error */
 export type PermissionErrorType = 'denied' | 'unsupported' | 'not-found' | 'generic';
 
@@ -91,7 +93,7 @@ function getErrorDetails(errorType: PermissionErrorType): {
   title: string;
   description: string;
   instructions: string[];
-  Icon: React.FC;
+  Icon: FC;
 } {
   switch (errorType) {
     case 'denied':

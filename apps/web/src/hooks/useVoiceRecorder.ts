@@ -149,6 +149,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         message: 'Recording stopped: maximum duration reached (5 minutes)',
       });
     }
+    // Note: stopRecording changes when duration changes, but we only call it once
+    // when MAX_DURATION_SECONDS is reached, so this is intentional
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration, isRecording]);
 
   // Cleanup object URLs on unmount
