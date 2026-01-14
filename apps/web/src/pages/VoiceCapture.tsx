@@ -158,7 +158,7 @@ export default function VoiceCapture() {
 
   /**
    * Handle confirm action - triggers upload and transcription flow
-   * Implemented in subtask-6-2: sends FormData to backend endpoint
+   * Sends FormData to backend endpoint for transcription
    */
   const handleConfirm = useCallback(async () => {
     if (!audioBlob) {
@@ -169,11 +169,60 @@ export default function VoiceCapture() {
     setUploadError(null);
     setTranscriptionResult(null);
 
-    // Start upload flow - actual implementation in subtask-6-2
+    // Start upload flow
     setUploadFlowState('uploading');
 
-    // TODO: Implement actual upload in subtask-6-2
-    // For now, this just sets the state to show the UI works
+    try {
+      // Create FormData with the audio blob
+      const formData = new FormData();
+      const audioFile = new File([audioBlob], 'recording.webm', {
+        type: audioBlob.type || 'audio/webm',
+      });
+      formData.append('audio', audioFile);
+
+      // Get API URL from environment
+      const apiUrl = import.meta.env.VITE_API_URL;
+      if (!apiUrl) {
+        throw new Error('API URL not configured');
+      }
+
+      // Transition to transcribing state when upload is sent
+      // Note: The actual upload and transcription happen in one request
+      // but we show "transcribing" after the request is made
+      setUploadFlowState('transcribing');
+
+      // Send POST request to backend
+      const response = await fetch(`${apiUrl}/decisions/voice`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      // Parse response
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response from backend
+        const errorData = data as { code?: string; message?: string };
+        throw new Error(errorData.message || 'Upload failed');
+      }
+
+      // Success - store transcription result
+      const result = data as { decisionId: string; transcript: string; audioUrl: string };
+      setTranscriptionResult({
+        decisionId: result.decisionId,
+        transcript: result.transcript,
+        audioUrl: result.audioUrl,
+      });
+      setUploadFlowState('complete');
+    } catch (err) {
+      // Handle errors
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setUploadError({
+        code: 'UPLOAD_ERROR',
+        message: errorMessage,
+      });
+      setUploadFlowState('error');
+    }
   }, [audioBlob]);
 
   /**
