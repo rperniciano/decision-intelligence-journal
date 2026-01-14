@@ -9,6 +9,7 @@
 .security-key
 logs/security/
 node_modules
+.turbo
 
 # Environment files with secrets
 .env
