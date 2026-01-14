@@ -1,4 +1,7 @@
+import { Routes, Route } from 'react-router-dom';
 import type { Decision, DecisionStatus } from '@decisions/shared';
+import AuthGuard from './components/AuthGuard';
+import VoiceCapture from './pages/VoiceCapture';
 
 /**
  * Example decision to demonstrate shared types integration
@@ -9,7 +12,11 @@ const exampleDecision: Pick<Decision, 'id' | 'title' | 'status'> = {
   status: 'in_progress' as DecisionStatus,
 };
 
-function App() {
+/**
+ * Home page component
+ * Landing page with project info
+ */
+function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
       <div className="text-center">
@@ -31,6 +38,27 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * App component with route configuration
+ *
+ * Routes:
+ * - / : Home page (public)
+ * - /record : Voice recording page (protected by AuthGuard)
+ */
+function App() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<HomePage />} />
+
+      {/* Protected routes - wrapped in AuthGuard */}
+      <Route element={<AuthGuard />}>
+        <Route path="/record" element={<VoiceCapture />} />
+      </Route>
+    </Routes>
   );
 }
 
