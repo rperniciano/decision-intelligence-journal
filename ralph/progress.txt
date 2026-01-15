@@ -1101,3 +1101,39 @@ Iteration: 1
   - Sample frequency data by averaging ranges for smoother bar visualization
   - Animation loop: request new frame at end of draw if isActive
 ---
+
+## 01/16/2026 - US-035
+Iteration: 1
+- What was implemented:
+  - Created RecordButton component in src/components/audio/RecordButton.tsx
+  - Props: onStart, onStop, isRecording, isDisabled, className
+  - 80px circular button (w-20 h-20 rounded-full) with microphone SVG icon
+  - Idle state: gray-100 background, gray-700 text, aria-label "Inizia registrazione"
+  - Recording state: red-500 background, white text, aria-label "Ferma registrazione"
+  - Pulse animation (animate-ping) with red-400 during recording
+  - Touch-friendly: 80px exceeds 44px minimum touch target
+  - Accessibility: aria-label, aria-pressed, focus:ring-4, focus:ring-offset-2
+  - Keyboard support: Enter and Space keys trigger action
+  - Disabled state: opacity-50, cursor-not-allowed, no pulse animation
+  - Updated audio/index.ts to export RecordButton and RecordButtonProps
+  - Created comprehensive unit test suite (43 tests) in RecordButton.test.tsx:
+    - Rendering tests (button, icon, type="button", className)
+    - Idle state tests (background, text color, aria-label, aria-pressed, no pulse)
+    - Recording state tests (red background, white text, aria-label, pulse animation)
+    - Click behavior tests (onStart/onStop called, disabled prevents calls)
+    - Keyboard accessibility tests (Enter, Space, other keys)
+    - Disabled state tests (disabled attr, cursor, opacity, no pulse)
+    - Size and styling tests (dimensions, rounded, focus ring, transitions)
+    - Microphone icon tests (aria-hidden, z-index, size)
+    - State transition tests (idle->recording, recording->idle, enable->disable)
+- Files changed:
+  - apps/web/src/components/audio/RecordButton.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+  - apps/web/src/__tests__/RecordButton.test.tsx (new)
+- **Learnings for future iterations:**
+  - Use animate-ping Tailwind class for pulse effect instead of custom CSS animation
+  - aria-pressed attribute is useful for toggle buttons to indicate current state
+  - Microphone icon uses two SVG paths: one for the mic body, one for the base/stand
+  - Button type="button" prevents unintended form submissions
+  - z-10 on icon ensures it appears above the pulse animation layer
+---

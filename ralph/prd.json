@@ -634,8 +634,8 @@
         "Test unitario per stati"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: RecordButton component with 80px circular button, microphone SVG icon, idle/recording states, pulse animation, Italian aria-labels, keyboard support. 43 unit tests."
     },
     {
       "id": "US-036",
