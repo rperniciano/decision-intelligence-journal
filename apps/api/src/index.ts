@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyEnv from '@fastify/env';
 import multipart from '@fastify/multipart';
+import authPlugin from './plugins/auth';
 import routes from './routes/index';
 import { fastifyEnvSchema, type Env } from './config/env';
 
@@ -52,6 +53,10 @@ await server.register(multipart, {
     fileSize: 52428800, // 50MB in bytes
   },
 });
+
+// Register authentication plugin
+// This provides the authenticate decorator for protected routes
+await server.register(authPlugin);
 
 // Register API routes
 await server.register(routes);
