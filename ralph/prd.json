@@ -33,8 +33,8 @@
 				"Comando 'pnpm turbo --version' funziona"
 			],
 			"priority": 1,
-			"passes": false,
-			"notes": ""
+			"passes": true,
+			"notes": "Completed: Added .nvmrc, fixed eslint config, added test task to turbo pipeline"
 		},
 		{
 			"id": "US-002",
