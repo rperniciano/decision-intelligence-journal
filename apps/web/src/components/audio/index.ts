@@ -9,3 +9,6 @@ export type { RecordingTimerProps } from './RecordingTimer';
 
 export { default as VoiceRecorder } from './VoiceRecorder';
 export type { VoiceRecorderProps, VoiceRecorderState } from './VoiceRecorder';
+
+export { default as AudioPlayer, formatDuration } from './AudioPlayer';
+export type { AudioPlayerProps } from './AudioPlayer';
