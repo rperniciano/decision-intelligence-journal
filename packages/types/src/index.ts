@@ -28,3 +28,6 @@ export * from './enums';
 
 // Re-export types from database module for convenience
 export * from './database';
+
+// Re-export types from decision module
+export * from './decision';
