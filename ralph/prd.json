@@ -512,8 +512,8 @@
         "Test integrazione"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: GET /api/users/profile endpoint implemented with auth, 404 handling, 200 response with ProfileResponse fields. 7 unit tests with mocked Supabase client."
     },
     {
       "id": "US-029",
@@ -528,8 +528,8 @@
         "Test unitario con mock auth context"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: ProtectedRoute component wraps children, supports custom redirectTo prop, shows loading spinner during auth check, uses useAuth() hook. 10 unit tests with mock auth context."
     },
     {
       "id": "US-030",
@@ -543,8 +543,8 @@
         "Test E2E: logout flow completo"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Dashboard logout button with Italian text 'Esci', 13 unit tests for Dashboard (logout flow, loading states, error handling), 5 E2E tests for logout flow."
     },
     {
       "id": "US-031",
@@ -560,8 +560,8 @@
         "Test unitario per rendering"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created Layout component with header, avatar/initials, dropdown menu (Profilo, Impostazioni, Esci), mobile responsive with sticky header and hamburger menu. 31 unit tests added."
     },
     {
       "id": "US-032",

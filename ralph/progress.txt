@@ -865,3 +865,137 @@ Iteration: 27
   - 23505 is PostgreSQL unique constraint violation error code
   - ProfileResponse uses camelCase (displayName, avatarUrl), DB uses snake_case (display_name, avatar_url)
 ---
+
+
+## 01/15/2026 - US-028
+Iteration: 28
+- What was implemented:
+  - Added GET /api/users/profile endpoint in apps/api/src/routes/users.ts
+  - Endpoint is protected by fastify.authenticate preHandler
+  - Returns 200 with ProfileResponse when profile exists
+  - Returns 404 "Profile not found for this user" when profile doesn't exist (PGRST116)
+  - Returns 500 "Failed to fetch profile" for database errors
+  - Returns 401 Unauthorized for unauthenticated requests
+  - Response includes: id, displayName, avatarUrl, onboardingCompleted, createdAt, updatedAt
+  - Created 7 comprehensive unit tests in apps/api/src/__tests__/users.test.ts:
+    - Test 200 with profile when profile exists
+    - Test 200 when displayName and avatarUrl are null (optional fields)
+    - Test 404 when profile does not exist
+    - Test 500 when database query fails
+    - Test 401 when no token is provided
+    - Test 401 when invalid token is provided
+    - Test snake_case to camelCase field mapping
+- Files changed:
+  - apps/api/src/routes/users.ts (modified - added GET endpoint)
+  - apps/api/src/__tests__/users.test.ts (modified - added 7 tests)
+  - ralph/prd.json (marked US-028 as passes: true)
+- **Learnings for future iterations:**
+  - GET profile follows same pattern as POST profile: use Supabase client, handle PGRST116 for not found
+  - Response field mapping from snake_case DB columns to camelCase API response is standard
+  - Use `|| undefined` to convert null DB values to undefined in response (for optional fields)
+  - Test suite now has 17 tests for users endpoints (10 POST + 7 GET)
+---
+
+
+## 01/15/2026 - US-029
+Iteration: 29
+- What was implemented:
+  - Created ProtectedRoute component in apps/web/src/components/AuthGuard.tsx
+  - ProtectedRoute wraps children and redirects to /login when not authenticated
+  - Supports optional redirectTo prop for custom redirect paths
+  - Shows loading spinner while checking auth state (loading: true)
+  - Uses useAuth() hook from AuthContext
+  - Kept existing AuthGuard component for backward compatibility (uses Outlet pattern)
+  - Created comprehensive unit test suite (10 tests) in apps/web/src/__tests__/ProtectedRoute.test.tsx:
+    - Test loading state while auth is being checked
+    - Test redirect to /login when not authenticated
+    - Test redirect to custom path when redirectTo prop provided
+    - Test renders children when authenticated
+    - Test renders multiple children correctly
+    - Test uses useAuth hook correctly
+    - AuthGuard tests: loading state, redirect, render nested routes
+- Files changed:
+  - apps/web/src/components/AuthGuard.tsx (modified - added ProtectedRoute component)
+  - apps/web/src/__tests__/ProtectedRoute.test.tsx (new - 10 tests)
+  - ralph/prd.json (marked US-029 as passes: true)
+- **Learnings for future iterations:**
+  - AuthGuard already existed with Outlet pattern; ProtectedRoute is the children-wrapper pattern
+  - Both patterns are valid in React Router v6: Outlet for nested routes, children for direct wrapping
+  - Mock useAuth with vi.mock('../contexts/AuthContext') for ProtectedRoute tests
+  - Use MemoryRouter with initialEntries for testing route redirects
+  - useLocation() from react-router-dom is useful for verifying redirect paths in tests
+  - Total web unit tests: 76 (including 10 new ProtectedRoute tests)
+---
+
+
+## 01/15/2026 - US-030
+Iteration: 30
+- What was implemented:
+  - Updated Dashboard logout button text from "Sign out" to Italian "Esci"
+  - Updated welcome message from "Welcome, [name]" to Italian "Ciao, [name]"
+  - Updated error message to Italian "Errore durante il logout. Riprova."
+  - Created comprehensive unit test suite (13 tests) in apps/web/src/__tests__/Dashboard.test.tsx:
+    - Loading spinner while checking auth
+    - Dashboard header with app title
+    - Logout button with Italian text "Esci"
+    - Welcome message with user name in Italian
+    - User email in footer
+    - signOut called when logout button clicked
+    - Button disabled during logout
+    - Loading spinner in button during logout
+    - Error message on logout failure
+    - Default Italian error message when error has no message
+    - Re-enable button after logout error
+    - Display name extracted from email correctly
+    - "User" as default display name when email unavailable
+  - Added 5 E2E tests for logout flow in apps/e2e/tests/example.spec.ts:
+    - Display logout button in dashboard header
+    - Redirect to login after successful logout
+    - Loading state during logout
+    - Welcome message with user name in Italian
+    - Clear session and redirect to login on logout
+- Files changed:
+  - apps/web/src/pages/Dashboard.tsx (modified - Italian localization)
+  - apps/web/src/__tests__/Dashboard.test.tsx (new - 13 tests)
+  - apps/e2e/tests/example.spec.ts (modified - 5 new E2E tests)
+  - ralph/prd.json (marked US-030 as passes: true)
+- **Learnings for future iterations:**
+  - Dashboard already had logout functionality; main work was Italian localization and tests
+  - When mocking useAuth in vitest, use a factory function pattern to avoid hoisting issues
+  - Use mockUseAuth.mockReturnValue() to override default mock for specific tests
+  - Use getAllByText when text may appear multiple times (desktop + mobile views)
+  - Session type requires token_type: 'bearer' as const for literal type compatibility
+  - Total web unit tests: 89 (including 13 new Dashboard tests)
+  - Total E2E tests: 37 (including 5 new logout tests)
+---
+
+
+## 01/15/2026 - US-031
+Iteration: 1
+- What was implemented:
+  - Created Layout component (apps/web/src/components/Layout.tsx) with:
+    - Header with logo (lightbulb icon) and app name "Decision Journal"
+    - User avatar (from user_metadata.avatar_url) or initials fallback
+    - Desktop dropdown menu with Profilo, Impostazioni, Esci links
+    - Mobile hamburger menu with same options
+    - Sticky header on mobile
+    - Main content area with proper padding
+    - Error notification area for logout failures
+  - Created comprehensive unit tests (31 tests) in Layout.test.tsx:
+    - Rendering tests (logo, avatar, initials, display name)
+    - Desktop dropdown menu tests
+    - Mobile menu tests
+    - Logout functionality tests
+    - Navigation link tests
+    - Accessibility tests
+  - Fixed TypeScript errors in Dashboard.test.tsx (User/Session type annotations)
+- Files changed:
+  - apps/web/src/components/Layout.tsx (new)
+  - apps/web/src/__tests__/Layout.test.tsx (new)
+  - apps/web/src/__tests__/Dashboard.test.tsx (type fixes)
+- **Learnings for future iterations:**
+  - Layout component closes both desktop dropdown and mobile menu immediately on logout start (setIsMenuOpen(false), setIsMobileMenuOpen(false))
+  - User metadata accessed via user.user_metadata.display_name and user.user_metadata.avatar_url
+  - Testing-library role queries: use aria-label for buttons without text content
+  - Menu items in dropdown have role="menuitem", hamburger button needs descriptive aria-label
+---
