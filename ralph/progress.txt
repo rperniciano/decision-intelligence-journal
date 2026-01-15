@@ -658,3 +658,84 @@ Iteration: 21
   - Use let variable with type annotation for capturing values in async test closures
 ---
 
+## 01/15/2026 - US-022
+Iteration: 22
+- What was implemented:
+  - Updated Login.tsx with app branding: Decision Journal logo and name
+  - Translated entire UI to Italian:
+    - "Accedi al tuo account" subtitle
+    - "Non hai un account? Registrati" registration link
+    - "Accedi" submit button
+    - "Accedi con Google" OAuth button
+    - "Oppure continua con" separator text
+    - Email/password placeholders in Italian
+  - Added SVG lightbulb icon as app logo in a circular blue container
+  - Improved error handling with Italian error messages:
+    - "Email o password non validi" for invalid credentials
+    - "Errore di connessione" for network errors
+  - Created comprehensive unit test suite (15 tests):
+    - Rendering tests for logo, form elements, links
+    - Loading state tests (initial auth check, form submission)
+    - Error state tests (invalid credentials, network errors, OAuth errors)
+    - Redirect behavior when authenticated
+    - Form submission tests for email and Google login
+    - Input disable tests during submission
+  - Updated Playwright E2E tests (7 tests):
+    - Tests for Italian UI elements
+    - Screenshot tests for desktop and mobile viewports
+    - Responsive design verification
+- Files changed:
+  - apps/web/src/pages/Login.tsx (modified)
+  - apps/web/src/__tests__/Login.test.tsx (new)
+  - apps/e2e/tests/example.spec.ts (modified)
+- **Learnings for future iterations:**
+  - Use page.screenshot() instead of toHaveScreenshot() for first-time screenshot tests (avoids baseline issues)
+  - Italian error messages should map common Supabase error patterns (Invalid login credentials, network)
+  - Login component already had robust functionality; main changes were branding and localization
+  - Route links should match existing app routing (/signup vs /register - use what exists in App.tsx)
+---
+
+
+## 01/15/2026 - US-023
+Iteration: 23
+- What was implemented:
+  - Added client-side form validation to Login.tsx:
+    - Email format validation with regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    - Password minimum length validation (6 characters)
+    - Custom Italian error messages: "Email obbligatoria", "Inserisci un'email valida", "Password obbligatoria", "La password deve contenere almeno 6 caratteri"
+  - Implemented inline error display:
+    - Red border on invalid fields (border-red-300, focus:ring-red-500)
+    - Error messages displayed below each field with red text
+    - ARIA attributes for accessibility (aria-invalid, aria-describedby)
+  - Errors clear automatically when user starts typing in field
+  - Removed native HTML required attribute (replaced with custom validation)
+  - Form prevents submission until all validation passes
+  - Added 7 new unit tests for validation scenarios:
+    - Empty email error
+    - Invalid email format error
+    - Empty password error
+    - Short password error
+    - Clear email error on typing
+    - Clear password error on typing
+    - Allow submission after fixing errors
+  - Added 8 E2E tests for login form:
+    - Validation error for empty email
+    - Validation error for invalid email format
+    - Validation error for empty password
+    - Validation error for short password
+    - Clear validation errors when typing
+    - Error message for invalid credentials
+    - Loading state during submission
+    - Successful form submission (passes validation)
+- Files changed:
+  - apps/web/src/pages/Login.tsx (modified)
+  - apps/web/src/__tests__/Login.test.tsx (modified)
+  - apps/e2e/tests/example.spec.ts (modified)
+- **Learnings for future iterations:**
+  - Native HTML5 email validation (type="email") blocks form submission before custom validation runs for invalid formats like "test" (no @)
+  - For testing invalid email format, use values that pass native validation but fail custom regex (e.g., "test@domain" missing TLD)
+  - Use Proxy<T> pattern for type-safe state updates when clearing individual field errors
+  - Input aria-invalid and aria-describedby improve accessibility for screen readers
+  - Keep PASSWORD_MIN_LENGTH as constant for easy configuration
+---
+

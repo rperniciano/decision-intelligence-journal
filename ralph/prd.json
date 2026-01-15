@@ -412,8 +412,8 @@
         "Screenshot test con Playwright"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Login page with Decision Journal branding, Italian UI translations, logo icon, responsive design, 15 unit tests, 7 E2E tests including screenshots"
     },
     {
       "id": "US-023",
@@ -430,8 +430,8 @@
         "Test E2E Playwright: login con credenziali invalide mostra errore"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Added client-side form validation (email format, password min 6 chars) with Italian error messages, inline error display with red borders, 7 new unit tests for validation, 8 E2E tests for login flow"
     },
     {
       "id": "US-024",
