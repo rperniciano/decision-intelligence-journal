@@ -3,18 +3,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
-import type { Decision, DecisionStatus } from '@decisions/shared';
 import AuthGuard from './components/AuthGuard';
 import VoiceCapture from './pages/VoiceCapture';
-
-/**
- * Example decision to demonstrate shared types integration
- */
-const exampleDecision: Pick<Decision, 'id' | 'title' | 'status'> = {
-  id: 'example-1',
-  title: 'Welcome to Decisions',
-  status: 'in_progress' as DecisionStatus,
-};
 
 /**
  * Home page component

@@ -9,9 +9,14 @@
 .security-key
 logs/security/
 node_modules
+dist
 .turbo
 
 # Environment files with secrets
 .env
 .env.local
 .env*.local
+
+.turbo
+.claude
+.auto-claude
