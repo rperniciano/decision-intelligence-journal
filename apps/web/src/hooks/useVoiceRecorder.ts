@@ -64,12 +64,7 @@ const MIN_DURATION_SECONDS = 2;
  * Get the best supported MIME type for audio recording
  */
 function getSupportedMimeType(): string | undefined {
-  const mimeTypes = [
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/mp4',
-    'audio/wav',
-  ];
+  const mimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/wav'];
 
   for (const mimeType of mimeTypes) {
     if (MediaRecorder.isTypeSupported(mimeType)) {
@@ -84,9 +79,11 @@ function getSupportedMimeType(): string | undefined {
  * Check if the browser supports MediaRecorder API
  */
 function isMediaRecorderSupported(): boolean {
-  return typeof MediaRecorder !== 'undefined' &&
-         typeof navigator.mediaDevices !== 'undefined' &&
-         typeof navigator.mediaDevices.getUserMedia !== 'undefined';
+  return (
+    typeof MediaRecorder !== 'undefined' &&
+    typeof navigator.mediaDevices !== 'undefined' &&
+    typeof navigator.mediaDevices.getUserMedia !== 'undefined'
+  );
 }
 
 /**
@@ -199,7 +196,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       setPermissionState('unsupported');
       setError({
         type: 'browser_unsupported',
-        message: 'Your browser does not support audio recording. Please use a modern browser like Chrome, Firefox, or Edge.',
+        message:
+          'Your browser does not support audio recording. Please use a modern browser like Chrome, Firefox, or Edge.',
       });
       return;
     }
@@ -235,7 +233,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       // Handle recording stop
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, {
-          type: mimeType || 'audio/webm'
+          type: mimeType || 'audio/webm',
         });
         setAudioBlob(blob);
 
@@ -272,7 +270,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
             setPermissionState('denied');
             setError({
               type: 'permission_denied',
-              message: 'Microphone permission was denied. Please allow microphone access in your browser settings.',
+              message:
+                'Microphone permission was denied. Please allow microphone access in your browser settings.',
             });
             break;
           case 'NotFoundError':

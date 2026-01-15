@@ -14,10 +14,7 @@ interface HealthResponse {
  *
  * Registers the /health endpoint for monitoring and liveness checks.
  */
-async function healthRoutes(
-  fastify: FastifyInstance,
-  _opts: FastifyPluginOptions
-): Promise<void> {
+async function healthRoutes(fastify: FastifyInstance, _opts: FastifyPluginOptions): Promise<void> {
   /**
    * GET /health
    *

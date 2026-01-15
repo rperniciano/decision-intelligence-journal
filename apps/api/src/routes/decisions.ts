@@ -77,201 +77,183 @@ async function decisionsRoutes(
    * Handles audio file upload and transcription.
    * Flow: validate file -> upload to Supabase Storage -> transcribe via AssemblyAI -> return result
    */
-  fastify.post<{ Reply: VoiceResponse | VoiceErrorResponse }>(
-    '/voice',
-    async (request, reply) => {
-      const startTime = Date.now();
-      const requestId = randomUUID();
+  fastify.post<{ Reply: VoiceResponse | VoiceErrorResponse }>('/voice', async (request, reply) => {
+    const startTime = Date.now();
+    const requestId = randomUUID();
 
-      fastify.log.info({ requestId }, 'Voice transcription request started');
+    fastify.log.info({ requestId }, 'Voice transcription request started');
 
-      // Step 1: Get and validate the uploaded file
-      let audioData: MultipartFile | undefined;
+    // Step 1: Get and validate the uploaded file
+    let audioData: MultipartFile | undefined;
 
-      try {
-        audioData = await request.file();
-      } catch (err) {
-        fastify.log.error({ requestId, error: err }, 'Failed to parse multipart data');
-        return reply.status(400).send({
-          error: 'Invalid request',
-          code: ErrorCodes.MISSING_FILE,
-          message: 'Could not parse multipart form data. Please upload an audio file.',
-        });
-      }
+    try {
+      audioData = await request.file();
+    } catch (err) {
+      fastify.log.error({ requestId, error: err }, 'Failed to parse multipart data');
+      return reply.status(400).send({
+        error: 'Invalid request',
+        code: ErrorCodes.MISSING_FILE,
+        message: 'Could not parse multipart form data. Please upload an audio file.',
+      });
+    }
 
-      if (!audioData) {
-        fastify.log.warn({ requestId }, 'No audio file provided');
-        return reply.status(400).send({
-          error: 'Missing file',
-          code: ErrorCodes.MISSING_FILE,
-          message: 'No audio file provided. Please upload an audio file.',
-        });
-      }
+    if (!audioData) {
+      fastify.log.warn({ requestId }, 'No audio file provided');
+      return reply.status(400).send({
+        error: 'Missing file',
+        code: ErrorCodes.MISSING_FILE,
+        message: 'No audio file provided. Please upload an audio file.',
+      });
+    }
 
-      fastify.log.info(
-        {
-          requestId,
-          filename: audioData.filename,
-          mimetype: audioData.mimetype,
-          fieldname: audioData.fieldname,
-        },
-        'Audio file received'
+    fastify.log.info(
+      {
+        requestId,
+        filename: audioData.filename,
+        mimetype: audioData.mimetype,
+        fieldname: audioData.fieldname,
+      },
+      'Audio file received'
+    );
+
+    // Validate MIME type
+    if (!ALLOWED_AUDIO_TYPES.includes(audioData.mimetype)) {
+      fastify.log.warn({ requestId, mimetype: audioData.mimetype }, 'Invalid audio format');
+      return reply.status(400).send({
+        error: 'Invalid format',
+        code: ErrorCodes.INVALID_FORMAT,
+        message: `Invalid audio format: ${audioData.mimetype}. Allowed formats: ${ALLOWED_AUDIO_TYPES.join(', ')}`,
+      });
+    }
+
+    // Step 2: Read the file buffer and validate size
+    const audioBuffer = await audioData.toBuffer();
+    const fileSize = audioBuffer.length;
+
+    if (fileSize > MAX_FILE_SIZE) {
+      fastify.log.warn({ requestId, fileSize, maxSize: MAX_FILE_SIZE }, 'File too large');
+      return reply.status(400).send({
+        error: 'File too large',
+        code: ErrorCodes.FILE_TOO_LARGE,
+        message: `File size (${Math.round(fileSize / 1024 / 1024)}MB) exceeds the maximum allowed size of 50MB.`,
+      });
+    }
+
+    fastify.log.info(
+      { requestId, fileSize: `${Math.round(fileSize / 1024)}KB` },
+      'File size validated'
+    );
+
+    // Step 3: Generate decision ID and storage path
+    const decisionId = randomUUID();
+    // For now, use 'anonymous' as userId - in production, extract from auth token
+    const userId = 'anonymous';
+    const storagePath = `${userId}/${decisionId}/recording.webm`;
+
+    fastify.log.info({ requestId, decisionId, storagePath }, 'Generated storage path');
+
+    // Step 4: Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from(AUDIO_BUCKET)
+      .upload(storagePath, audioBuffer, {
+        contentType: audioData.mimetype,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      fastify.log.error(
+        { requestId, decisionId, error: uploadError },
+        'Failed to upload audio to storage'
       );
+      return reply.status(500).send({
+        error: 'Upload failed',
+        code: ErrorCodes.UPLOAD_FAILED,
+        message: 'Failed to upload audio file. Please try again.',
+      });
+    }
 
-      // Validate MIME type
-      if (!ALLOWED_AUDIO_TYPES.includes(audioData.mimetype)) {
-        fastify.log.warn(
-          { requestId, mimetype: audioData.mimetype },
-          'Invalid audio format'
-        );
-        return reply.status(400).send({
-          error: 'Invalid format',
-          code: ErrorCodes.INVALID_FORMAT,
-          message: `Invalid audio format: ${audioData.mimetype}. Allowed formats: ${ALLOWED_AUDIO_TYPES.join(', ')}`,
-        });
-      }
+    fastify.log.info({ requestId, decisionId, storagePath }, 'Audio uploaded to storage');
 
-      // Step 2: Read the file buffer and validate size
-      const audioBuffer = await audioData.toBuffer();
-      const fileSize = audioBuffer.length;
+    // Step 5: Generate signed URL for AssemblyAI access
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from(AUDIO_BUCKET)
+      .createSignedUrl(storagePath, SIGNED_URL_EXPIRY);
 
-      if (fileSize > MAX_FILE_SIZE) {
-        fastify.log.warn(
-          { requestId, fileSize, maxSize: MAX_FILE_SIZE },
-          'File too large'
-        );
-        return reply.status(400).send({
-          error: 'File too large',
-          code: ErrorCodes.FILE_TOO_LARGE,
-          message: `File size (${Math.round(fileSize / 1024 / 1024)}MB) exceeds the maximum allowed size of 50MB.`,
-        });
-      }
-
-      fastify.log.info(
-        { requestId, fileSize: `${Math.round(fileSize / 1024)}KB` },
-        'File size validated'
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      fastify.log.error(
+        { requestId, decisionId, error: signedUrlError },
+        'Failed to generate signed URL'
       );
+      return reply.status(500).send({
+        error: 'Upload failed',
+        code: ErrorCodes.UPLOAD_FAILED,
+        message: 'Failed to generate access URL for transcription. Please try again.',
+      });
+    }
 
-      // Step 3: Generate decision ID and storage path
-      const decisionId = randomUUID();
-      // For now, use 'anonymous' as userId - in production, extract from auth token
-      const userId = 'anonymous';
-      const storagePath = `${userId}/${decisionId}/recording.webm`;
+    const audioUrl = signedUrlData.signedUrl;
+    fastify.log.info({ requestId, decisionId }, 'Signed URL generated for transcription');
 
-      fastify.log.info(
-        { requestId, decisionId, storagePath },
-        'Generated storage path'
-      );
+    // Step 6: Submit to AssemblyAI for transcription
+    fastify.log.info(
+      { requestId, decisionId, language: transcriptionConfig.language_code },
+      'Starting transcription'
+    );
 
-      // Step 4: Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from(AUDIO_BUCKET)
-        .upload(storagePath, audioBuffer, {
-          contentType: audioData.mimetype,
-          upsert: false,
-        });
+    try {
+      const transcriptResult = await assemblyai.transcripts.transcribe({
+        audio: audioUrl,
+        ...transcriptionConfig,
+      });
 
-      if (uploadError) {
+      if (transcriptResult.status === 'error') {
         fastify.log.error(
-          { requestId, decisionId, error: uploadError },
-          'Failed to upload audio to storage'
-        );
-        return reply.status(500).send({
-          error: 'Upload failed',
-          code: ErrorCodes.UPLOAD_FAILED,
-          message: 'Failed to upload audio file. Please try again.',
-        });
-      }
-
-      fastify.log.info(
-        { requestId, decisionId, storagePath },
-        'Audio uploaded to storage'
-      );
-
-      // Step 5: Generate signed URL for AssemblyAI access
-      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-        .from(AUDIO_BUCKET)
-        .createSignedUrl(storagePath, SIGNED_URL_EXPIRY);
-
-      if (signedUrlError || !signedUrlData?.signedUrl) {
-        fastify.log.error(
-          { requestId, decisionId, error: signedUrlError },
-          'Failed to generate signed URL'
-        );
-        return reply.status(500).send({
-          error: 'Upload failed',
-          code: ErrorCodes.UPLOAD_FAILED,
-          message: 'Failed to generate access URL for transcription. Please try again.',
-        });
-      }
-
-      const audioUrl = signedUrlData.signedUrl;
-      fastify.log.info(
-        { requestId, decisionId },
-        'Signed URL generated for transcription'
-      );
-
-      // Step 6: Submit to AssemblyAI for transcription
-      fastify.log.info(
-        { requestId, decisionId, language: transcriptionConfig.language_code },
-        'Starting transcription'
-      );
-
-      try {
-        const transcriptResult = await assemblyai.transcripts.transcribe({
-          audio: audioUrl,
-          ...transcriptionConfig,
-        });
-
-        if (transcriptResult.status === 'error') {
-          fastify.log.error(
-            {
-              requestId,
-              decisionId,
-              error: transcriptResult.error,
-            },
-            'Transcription failed'
-          );
-          return reply.status(500).send({
-            error: 'Transcription failed',
-            code: ErrorCodes.TRANSCRIPTION_FAILED,
-            message: transcriptResult.error || 'Failed to transcribe audio. Please try again.',
-          });
-        }
-
-        const transcript = transcriptResult.text || '';
-        const duration = Date.now() - startTime;
-
-        fastify.log.info(
           {
             requestId,
             decisionId,
-            transcriptLength: transcript.length,
-            durationMs: duration,
+            error: transcriptResult.error,
           },
-          'Transcription completed successfully'
-        );
-
-        // Return successful response
-        return reply.status(200).send({
-          decisionId,
-          transcript,
-          audioUrl,
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        fastify.log.error(
-          { requestId, decisionId, error: errorMessage },
-          'Transcription request failed'
+          'Transcription failed'
         );
         return reply.status(500).send({
           error: 'Transcription failed',
           code: ErrorCodes.TRANSCRIPTION_FAILED,
-          message: 'Failed to transcribe audio. Please try again.',
+          message: transcriptResult.error || 'Failed to transcribe audio. Please try again.',
         });
       }
+
+      const transcript = transcriptResult.text || '';
+      const duration = Date.now() - startTime;
+
+      fastify.log.info(
+        {
+          requestId,
+          decisionId,
+          transcriptLength: transcript.length,
+          durationMs: duration,
+        },
+        'Transcription completed successfully'
+      );
+
+      // Return successful response
+      return reply.status(200).send({
+        decisionId,
+        transcript,
+        audioUrl,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      fastify.log.error(
+        { requestId, decisionId, error: errorMessage },
+        'Transcription request failed'
+      );
+      return reply.status(500).send({
+        error: 'Transcription failed',
+        code: ErrorCodes.TRANSCRIPTION_FAILED,
+        message: 'Failed to transcribe audio. Please try again.',
+      });
     }
-  );
+  });
 }
 
 export default decisionsRoutes;

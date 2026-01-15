@@ -166,10 +166,7 @@ export default function TranscriptEditor({
       {/* Header with title and character count */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-100">Trascrizione</h2>
-        <span
-          className="text-sm text-slate-400"
-          aria-label={`${characterCount} characters`}
-        >
+        <span className="text-sm text-slate-400" aria-label={`${characterCount} characters`}>
           {characterCount.toLocaleString()} caratteri
         </span>
       </div>

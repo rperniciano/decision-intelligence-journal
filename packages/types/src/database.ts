@@ -6,7 +6,13 @@
 // Enum types - using union types for better TypeScript inference
 export type DecisionStatus = 'draft' | 'in_progress' | 'decided' | 'outcome_recorded';
 export type OutcomeRating = 'better_than_expected' | 'as_expected' | 'worse_than_expected';
-export type DecisionCategory = 'career' | 'financial' | 'relationship' | 'health' | 'lifestyle' | 'other';
+export type DecisionCategory =
+  | 'career'
+  | 'financial'
+  | 'relationship'
+  | 'health'
+  | 'lifestyle'
+  | 'other';
 export type EmotionalState =
   | 'confident'
   | 'anxious'

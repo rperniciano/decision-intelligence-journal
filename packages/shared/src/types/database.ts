@@ -99,8 +99,14 @@ export type CreateCategory = Omit<Category, 'id' | 'created_at' | 'updated_at'>;
 export type CreateProfile = Omit<Profile, 'id' | 'created_at' | 'updated_at'>;
 
 // Helper types for updating entities (all fields optional except id)
-export type UpdateDecision = Partial<Omit<Decision, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
-export type UpdateOption = Partial<Omit<Option, 'id' | 'created_at' | 'updated_at' | 'decision_id'>>;
+export type UpdateDecision = Partial<
+  Omit<Decision, 'id' | 'created_at' | 'updated_at' | 'user_id'>
+>;
+export type UpdateOption = Partial<
+  Omit<Option, 'id' | 'created_at' | 'updated_at' | 'decision_id'>
+>;
 export type UpdateProCon = Partial<Omit<ProCon, 'id' | 'created_at' | 'updated_at' | 'option_id'>>;
-export type UpdateCategory = Partial<Omit<Category, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
+export type UpdateCategory = Partial<
+  Omit<Category, 'id' | 'created_at' | 'updated_at' | 'user_id'>
+>;
 export type UpdateProfile = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;

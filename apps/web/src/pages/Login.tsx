@@ -63,21 +63,14 @@ export default function Login() {
           </h1>
           <p className="mt-2 text-sm text-gray-600">
             Or{' '}
-            <Link
-              to="/signup"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
+            <Link to="/signup" className="font-medium text-blue-600 hover:text-blue-500">
               create a new account
             </Link>
           </p>
         </div>
 
         {error && (
-          <div
-            className="rounded-md bg-red-50 p-4"
-            role="alert"
-            aria-live="polite"
-          >
+          <div className="rounded-md bg-red-50 p-4" role="alert" aria-live="polite">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
@@ -103,10 +96,7 @@ export default function Login() {
         <form className="mt-8 space-y-6" onSubmit={handleEmailLogin}>
           <div className="space-y-4 rounded-md">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <input
@@ -124,10 +114,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
@@ -151,11 +138,7 @@ export default function Login() {
               disabled={isSubmitting}
               className="flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting ? (
-                <LoadingSpinner size="sm" className="py-0.5" />
-              ) : (
-                'Sign in'
-              )}
+              {isSubmitting ? <LoadingSpinner size="sm" className="py-0.5" /> : 'Sign in'}
             </button>
           </div>
         </form>
@@ -165,9 +148,7 @@ export default function Login() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-gray-50 px-2 text-gray-500">
-              Or continue with
-            </span>
+            <span className="bg-gray-50 px-2 text-gray-500">Or continue with</span>
           </div>
         </div>
 

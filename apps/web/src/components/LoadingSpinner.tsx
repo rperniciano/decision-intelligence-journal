@@ -9,10 +9,7 @@ const sizeClasses = {
   lg: 'h-12 w-12 border-4',
 };
 
-export default function LoadingSpinner({
-  size = 'md',
-  className = '',
-}: LoadingSpinnerProps) {
+export default function LoadingSpinner({ size = 'md', className = '' }: LoadingSpinnerProps) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <div

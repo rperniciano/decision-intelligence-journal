@@ -8,10 +8,7 @@ import decisionsRoutes from './decisions';
  * Registers all API routes with the Fastify instance.
  * Add new route plugins here as the API grows.
  */
-async function routes(
-  fastify: FastifyInstance,
-  _opts: FastifyPluginOptions
-): Promise<void> {
+async function routes(fastify: FastifyInstance, _opts: FastifyPluginOptions): Promise<void> {
   // Register health check routes
   await fastify.register(healthRoutes);
 

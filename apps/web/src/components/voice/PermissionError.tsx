@@ -138,8 +138,7 @@ function getErrorDetails(errorType: PermissionErrorType): {
     default:
       return {
         title: 'Recording Error',
-        description:
-          'An error occurred while trying to access your microphone. Please try again.',
+        description: 'An error occurred while trying to access your microphone. Please try again.',
         instructions: [
           'Check your browser permissions',
           'Make sure no other app is using the microphone',
@@ -209,15 +208,10 @@ export default function PermissionError({
 
       {/* Instructions list */}
       <div className="w-full text-left bg-slate-800/50 rounded-lg p-4">
-        <h3 className="text-sm font-medium text-slate-200 mb-3">
-          How to fix this:
-        </h3>
+        <h3 className="text-sm font-medium text-slate-200 mb-3">How to fix this:</h3>
         <ol className="space-y-2">
           {instructions.map((instruction, index) => (
-            <li
-              key={index}
-              className="flex items-start gap-3 text-sm text-slate-400"
-            >
+            <li key={index} className="flex items-start gap-3 text-sm text-slate-400">
               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center text-xs font-medium">
                 {index + 1}
               </span>

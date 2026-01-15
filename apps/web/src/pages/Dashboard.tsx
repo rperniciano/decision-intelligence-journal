@@ -38,9 +38,7 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-semibold text-gray-900">
-            Decision Intelligence Journal
-          </h1>
+          <h1 className="text-xl font-semibold text-gray-900">Decision Intelligence Journal</h1>
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-gray-600 sm:block">
               Welcome, <span className="font-medium">{displayName}</span>
@@ -51,11 +49,7 @@ export default function Dashboard() {
               disabled={isLoggingOut}
               className="rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isLoggingOut ? (
-                <LoadingSpinner size="sm" />
-              ) : (
-                'Sign out'
-              )}
+              {isLoggingOut ? <LoadingSpinner size="sm" /> : 'Sign out'}
             </button>
           </div>
         </div>
@@ -114,15 +108,11 @@ export default function Dashboard() {
             </svg>
           </div>
 
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-            Dashboard
-          </h2>
-          <p className="mt-2 text-lg text-gray-600">
-            Coming soon
-          </p>
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Dashboard</h2>
+          <p className="mt-2 text-lg text-gray-600">Coming soon</p>
           <p className="mt-4 max-w-md text-sm text-gray-500">
-            We&apos;re working hard to bring you powerful decision intelligence tools.
-            Check back soon for journal entries, decision tracking, and insights.
+            We&apos;re working hard to bring you powerful decision intelligence tools. Check back
+            soon for journal entries, decision tracking, and insights.
           </p>
         </div>
       </main>
@@ -133,8 +123,7 @@ export default function Dashboard() {
           <p className="text-center text-sm text-gray-500">
             {user?.email && (
               <span>
-                Signed in as{' '}
-                <span className="font-medium text-gray-700">{user.email}</span>
+                Signed in as <span className="font-medium text-gray-700">{user.email}</span>
               </span>
             )}
           </p>

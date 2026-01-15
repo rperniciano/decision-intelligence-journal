@@ -77,26 +77,17 @@ export default function Signup() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Create your account
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Create your account</h1>
           <p className="mt-2 text-sm text-gray-600">
             Or{' '}
-            <Link
-              to="/login"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
+            <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
               sign in to your existing account
             </Link>
           </p>
         </div>
 
         {error && (
-          <div
-            className="rounded-md bg-red-50 p-4"
-            role="alert"
-            aria-live="polite"
-          >
+          <div className="rounded-md bg-red-50 p-4" role="alert" aria-live="polite">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg
@@ -122,10 +113,7 @@ export default function Signup() {
         <form className="mt-8 space-y-6" onSubmit={handleEmailSignup}>
           <div className="space-y-4 rounded-md">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
               <input
@@ -143,10 +131,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
@@ -164,10 +149,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm password
               </label>
               <input
@@ -191,11 +173,7 @@ export default function Signup() {
               disabled={isSubmitting}
               className="flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSubmitting ? (
-                <LoadingSpinner size="sm" className="py-0.5" />
-              ) : (
-                'Create account'
-              )}
+              {isSubmitting ? <LoadingSpinner size="sm" className="py-0.5" /> : 'Create account'}
             </button>
           </div>
         </form>
@@ -205,9 +183,7 @@ export default function Signup() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-gray-50 px-2 text-gray-500">
-              Or continue with
-            </span>
+            <span className="bg-gray-50 px-2 text-gray-500">Or continue with</span>
           </div>
         </div>
 
