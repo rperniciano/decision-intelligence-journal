@@ -44,25 +44,53 @@ pnpm install
 
 ### 3. Configure environment variables
 
-Copy the example environment file and fill in your values:
+The project uses environment files in each app directory:
 
 ```bash
-cp .env.example .env
+# Copy example files
+cp apps/web/.env.example apps/web/.env.local
+cp apps/api/.env.example apps/api/.env
 ```
 
-Edit `.env` with your Supabase credentials:
+#### Frontend (`apps/web/.env.local`)
 
 ```env
-# Frontend (exposed to browser)
-VITE_API_URL=http://localhost:3001
+# Supabase Configuration (public/client-side)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 
-# Backend (server-side only)
-PORT=3001
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+# Backend API URL
+VITE_API_URL=http://localhost:3001
 ```
+
+#### Backend (`apps/api/.env`)
+
+```env
+# Server Configuration
+PORT=3001
+NODE_ENV=development
+HOST=0.0.0.0
+LOG_LEVEL=info
+CORS_ORIGIN=http://localhost:5173
+
+# Supabase Configuration (REQUIRED for most features)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+
+# AI Services (optional - mock services used if not provided)
+ASSEMBLYAI_API_KEY=your-assemblyai-api-key
+OPENAI_API_KEY=your-openai-api-key
+```
+
+#### Getting Your Keys
+
+1. **Supabase**: Go to [Supabase Dashboard](https://supabase.com/dashboard) > Your Project > Settings > API
+   - Copy the Project URL, `anon` key, and `service_role` key
+2. **AssemblyAI** (optional): Get from [AssemblyAI Dashboard](https://www.assemblyai.com/dashboard/)
+3. **OpenAI** (optional): Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+
+> **Note**: The `SUPABASE_SERVICE_ROLE_KEY` is a secret key that bypasses Row Level Security. Never expose it to the browser.
 
 ### 4. Start development servers
 
@@ -115,15 +143,15 @@ decisions/
 
 Run these commands from the root directory:
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all apps in development mode |
-| `pnpm build` | Build all apps for production |
-| `pnpm lint` | Run ESLint on all packages |
-| `pnpm typecheck` | Run TypeScript type checking |
-| `pnpm format` | Format code with Prettier |
-| `pnpm format:check` | Check code formatting |
-| `pnpm clean` | Remove build artifacts and node_modules |
+| Command             | Description                             |
+| ------------------- | --------------------------------------- |
+| `pnpm dev`          | Start all apps in development mode      |
+| `pnpm build`        | Build all apps for production           |
+| `pnpm lint`         | Run ESLint on all packages              |
+| `pnpm typecheck`    | Run TypeScript type checking            |
+| `pnpm format`       | Format code with Prettier               |
+| `pnpm format:check` | Check code formatting                   |
+| `pnpm clean`        | Remove build artifacts and node_modules |
 
 ### Running Individual Apps
 
@@ -151,6 +179,7 @@ import { Button } from '@/components/Button';
 ```
 
 Available aliases:
+
 - `@/` - `src/`
 - `@/components` - `src/components/`
 - `@/lib` - `src/lib/`
@@ -174,11 +203,13 @@ const decision: Decision = {
 ## Development Workflow
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature
    ```
 
 2. **Start development servers**
+
    ```bash
    pnpm dev
    ```
@@ -186,12 +217,14 @@ const decision: Decision = {
 3. **Make changes** - Hot reload is enabled for both frontend and backend
 
 4. **Check for errors**
+
    ```bash
    pnpm lint
    pnpm typecheck
    ```
 
 5. **Format code**
+
    ```bash
    pnpm format
    ```
@@ -209,15 +242,17 @@ const decision: Decision = {
 If ports 5173 or 3001 are already in use, you can configure different ports:
 
 **Frontend**: Edit `apps/web/vite.config.ts`:
+
 ```typescript
 export default defineConfig({
   server: {
-    port: 5174 // Change to available port
-  }
-})
+    port: 5174, // Change to available port
+  },
+});
 ```
 
 **Backend**: Set the `PORT` environment variable:
+
 ```bash
 PORT=3002 pnpm --filter api dev
 ```
@@ -225,6 +260,7 @@ PORT=3002 pnpm --filter api dev
 ### pnpm Not Found
 
 Ensure pnpm is installed globally:
+
 ```bash
 npm install -g pnpm
 ```
@@ -232,11 +268,13 @@ npm install -g pnpm
 ### Node.js Version
 
 This project requires Node.js 20 or higher. Check your version:
+
 ```bash
 node --version
 ```
 
 Install the correct version using [nvm](https://github.com/nvm-sh/nvm):
+
 ```bash
 nvm install 20
 nvm use 20
@@ -245,6 +283,7 @@ nvm use 20
 ### TypeScript Errors in Shared Package
 
 If you see TypeScript errors related to `@decisions/shared`, rebuild the shared package:
+
 ```bash
 pnpm --filter @decisions/shared build
 ```
