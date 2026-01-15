@@ -1,13 +1,20 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import fastifyEnv from '@fastify/env';
 import multipart from '@fastify/multipart';
 import routes from './routes/index';
+import { fastifyEnvSchema, type Env } from './config/env';
 
-// Environment configuration
-const PORT = parseInt(process.env.PORT || '3001', 10);
-const HOST = process.env.HOST || '0.0.0.0';
+// Extend FastifyInstance to include config
+declare module 'fastify' {
+  interface FastifyInstance {
+    config: Env;
+  }
+}
 
 // Create Fastify instance with logging enabled
+// Note: We read log settings from process.env initially,
+// then use validated config after @fastify/env is registered
 const server = Fastify({
   logger: {
     level: process.env.LOG_LEVEL || 'info',
@@ -24,9 +31,17 @@ const server = Fastify({
   },
 });
 
+// Register @fastify/env for environment variable validation
+// This must be registered before other plugins that depend on config
+await server.register(fastifyEnv, {
+  confKey: 'config',
+  schema: fastifyEnvSchema,
+  dotenv: true,
+});
+
 // Register CORS plugin for frontend communication
 await server.register(cors, {
-  origin: process.env.CORS_ORIGIN || true,
+  origin: server.config.CORS_ORIGIN || true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 });
@@ -59,8 +74,10 @@ process.on('SIGTERM', () => shutdown('SIGTERM'));
 // Start server
 const start = async () => {
   try {
+    const { PORT, HOST } = server.config;
     await server.listen({ port: PORT, host: HOST });
     server.log.info(`Server is running on http://${HOST}:${PORT}`);
+    server.log.info(`Environment: ${server.config.NODE_ENV}`);
   } catch (err) {
     server.log.error(err, 'Failed to start server');
     process.exit(1);
