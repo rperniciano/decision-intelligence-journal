@@ -773,3 +773,37 @@ Iteration: 24
   - Test OAuth flow by verifying navigation occurs, not by mocking the OAuth provider
 ---
 
+
+## 01/15/2026 - US-025
+Iteration: 25
+- What was implemented:
+  - Updated apps/web/src/pages/Signup.tsx with full page redesign:
+    - Added app logo (lightbulb icon in blue circle) and "Decision Journal" branding
+    - Translated all UI text to Italian (labels, placeholders, buttons, error messages)
+    - Added name field (optional) marked with "(opzionale)" label
+    - Email, password, confirm password fields with inline validation
+    - "Crea Account" submit button with loading state
+    - "Registrati con Google" OAuth button
+    - "Hai già un account? Accedi" link to /login
+  - Updated AuthContext.tsx:
+    - Extended signUp method to accept optional displayName parameter
+    - Passes displayName as user_metadata to Supabase signUp
+  - Created comprehensive unit test suite (27 tests):
+    - Rendering tests for all UI elements
+    - Loading state tests
+    - Error state tests for various failure scenarios
+    - Redirect behavior when authenticated
+    - Form validation tests for all fields
+    - Clear error on typing tests
+    - Form submission tests with/without display name
+- Files changed:
+  - apps/web/src/pages/Signup.tsx (redesigned)
+  - apps/web/src/contexts/AuthContext.tsx (modified signUp)
+  - apps/web/src/__tests__/Signup.test.tsx (new - 27 tests)
+- **Learnings for future iterations:**
+  - PRD mentioned /register but App.tsx already had /signup route - use existing routes
+  - Signup page validation has stricter rules than login (8 chars + number for signup vs 6 chars for login)
+  - Use screen.getByLabelText(/^password$/i) for exact match when there are multiple password fields
+  - displayName can be passed to Supabase via options.data in signUp call
+  - Test patterns from Login.test.tsx can be reused/adapted for Signup.test.tsx
+---
