@@ -40,3 +40,6 @@ export * from './option-pro-con';
 
 // Re-export types from decision-outcome module
 export * from './decision-outcome';
+
+// Re-export types from followup-reminder module
+export * from './followup-reminder';
