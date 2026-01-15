@@ -43,3 +43,6 @@ export * from './decision-outcome';
 
 // Re-export types from followup-reminder module
 export * from './followup-reminder';
+
+// Re-export types from api module
+export * from './api';
