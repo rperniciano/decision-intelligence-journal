@@ -1032,3 +1032,34 @@ Iteration: 1
   - Hook already existed with full functionality - main work was renaming and adding alias
   - Backwards compatibility via export const useVoiceRecorder = useMediaRecorder
 ---
+
+## 01/16/2026 - US-033
+Iteration: 1
+- What was implemented:
+  - Created useAudioAnalyser hook in src/hooks/useAudioAnalyser.ts
+  - Hook accepts MediaStream via startAnalysing(stream) function
+  - Returns frequencyData (Uint8Array) and timeData (Uint8Array) for visualization
+  - Uses AudioContext + AnalyserNode from Web Audio API
+  - Updates data via requestAnimationFrame for smooth continuous updates
+  - Configurable options: fftSize (default 256), minDecibels, maxDecibels, smoothingTimeConstant
+  - Supports webkitAudioContext fallback for older browsers
+  - Proper cleanup on unmount: cancels animation frame, disconnects nodes, closes AudioContext
+  - Created comprehensive unit tests (27 tests) in useAudioAnalyser.test.ts:
+    - Initial state tests (empty arrays, correct sizes based on fftSize)
+    - startAnalysing tests (AudioContext creation, AnalyserNode setup, animation frame loop)
+    - Error handling tests (unsupported browser, initialization errors)
+    - stopAnalysing tests (cleanup, disconnect, close)
+    - Unmount cleanup tests
+    - Continuous update tests
+    - webkitAudioContext fallback test
+- Files changed:
+  - apps/web/src/hooks/useAudioAnalyser.ts (new)
+  - apps/web/src/__tests__/useAudioAnalyser.test.ts (new)
+- **Learnings for future iterations:**
+  - Web Audio API AnalyserNode.frequencyBinCount = fftSize / 2
+  - Use Uint8Array<ArrayBuffer> explicit type for Web Audio API compatibility with newer TypeScript
+  - To copy Uint8Array for React state, use new Uint8Array(length) + .set() instead of new Uint8Array(array)
+  - Mock AudioContext by tracking instances in an array rather than using vi.fn() as constructor
+  - AnalyserNode methods getByteFrequencyData/getByteTimeDomainData fill the provided array in-place
+  - webkitAudioContext is still needed for some older browsers
+---
