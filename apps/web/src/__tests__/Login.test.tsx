@@ -294,6 +294,208 @@ describe('Login Page', () => {
     });
   });
 
+  describe('Form Validation', () => {
+    it('shows error when email is empty', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      // Only fill password, leave email empty
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should show email validation error
+      await waitFor(() => {
+        expect(screen.getByText(/email obbligatoria/i)).toBeInTheDocument();
+      });
+
+      // signInWithPassword should NOT be called
+      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error when email format is invalid', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      // Use email that passes native validation but fails our custom regex
+      // (missing TLD after dot)
+      await user.type(emailInput, 'test@domain');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should show email format error
+      await waitFor(() => {
+        expect(screen.getByText(/inserisci un'email valida/i)).toBeInTheDocument();
+      });
+
+      // signInWithPassword should NOT be called
+      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error when password is empty', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      // Only fill email, leave password empty
+      await user.type(emailInput, 'test@example.com');
+      await user.click(submitButton);
+
+      // Should show password validation error
+      await waitFor(() => {
+        expect(screen.getByText(/password obbligatoria/i)).toBeInTheDocument();
+      });
+
+      // signInWithPassword should NOT be called
+      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it('shows error when password is less than 6 characters', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, '12345'); // Only 5 characters
+      await user.click(submitButton);
+
+      // Should show password length error
+      await waitFor(() => {
+        expect(screen.getByText(/almeno 6 caratteri/i)).toBeInTheDocument();
+      });
+
+      // signInWithPassword should NOT be called
+      expect(mockSignInWithPassword).not.toHaveBeenCalled();
+    });
+
+    it('clears email error when user starts typing', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      // Submit with empty email to trigger error
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/email obbligatoria/i)).toBeInTheDocument();
+      });
+
+      // Start typing in email field
+      await user.type(emailInput, 't');
+
+      // Error should be cleared
+      await waitFor(() => {
+        expect(screen.queryByText(/email obbligatoria/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it('clears password error when user starts typing', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      // Submit with empty password to trigger error
+      await user.type(emailInput, 'test@example.com');
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/password obbligatoria/i)).toBeInTheDocument();
+      });
+
+      // Start typing in password field
+      await user.type(passwordInput, 'p');
+
+      // Error should be cleared
+      await waitFor(() => {
+        expect(screen.queryByText(/password obbligatoria/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it('allows valid form submission after fixing validation errors', async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /^accedi$/i })).toBeInTheDocument();
+      });
+
+      const emailInput = screen.getByLabelText(/email/i);
+      const passwordInput = screen.getByLabelText(/password/i);
+      const submitButton = screen.getByRole('button', { name: /^accedi$/i });
+
+      // Submit with empty form first
+      await user.click(submitButton);
+
+      // Verify both errors are shown
+      await waitFor(() => {
+        expect(screen.getByText(/email obbligatoria/i)).toBeInTheDocument();
+        expect(screen.getByText(/password obbligatoria/i)).toBeInTheDocument();
+      });
+
+      // Enter valid data
+      await user.type(emailInput, 'test@example.com');
+      await user.type(passwordInput, 'password123');
+      await user.click(submitButton);
+
+      // Should call signInWithPassword
+      await waitFor(() => {
+        expect(mockSignInWithPassword).toHaveBeenCalledWith({
+          email: 'test@example.com',
+          password: 'password123',
+        });
+      });
+    });
+  });
+
   describe('Form Submission', () => {
     it('calls signInWithPassword with correct credentials on form submit', async () => {
       const user = userEvent.setup();

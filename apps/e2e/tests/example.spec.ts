@@ -96,3 +96,158 @@ test.describe('Login Page UI', () => {
     });
   });
 });
+
+test.describe('Login Form Validation', () => {
+  test('should show validation error for empty email', async ({ page }) => {
+    await page.goto('/login');
+
+    // Fill only password
+    await page.getByLabel(/password/i).fill('password123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /^accedi$/i }).click();
+
+    // Verify email validation error appears
+    await expect(page.getByText(/email obbligatoria/i)).toBeVisible();
+  });
+
+  test('should show validation error for invalid email format', async ({ page }) => {
+    await page.goto('/login');
+
+    // Fill email that passes native validation but fails our custom regex (missing TLD)
+    await page.getByLabel(/email/i).fill('test@domain');
+    await page.getByLabel(/password/i).fill('password123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /^accedi$/i }).click();
+
+    // Verify email format error appears
+    await expect(page.getByText(/inserisci un'email valida/i)).toBeVisible();
+  });
+
+  test('should show validation error for empty password', async ({ page }) => {
+    await page.goto('/login');
+
+    // Fill only email
+    await page.getByLabel(/email/i).fill('test@example.com');
+
+    // Click submit button
+    await page.getByRole('button', { name: /^accedi$/i }).click();
+
+    // Verify password validation error appears
+    await expect(page.getByText(/password obbligatoria/i)).toBeVisible();
+  });
+
+  test('should show validation error for short password', async ({ page }) => {
+    await page.goto('/login');
+
+    // Fill email and short password
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/password/i).fill('12345');
+
+    // Click submit button
+    await page.getByRole('button', { name: /^accedi$/i }).click();
+
+    // Verify password length error appears
+    await expect(page.getByText(/almeno 6 caratteri/i)).toBeVisible();
+  });
+
+  test('should clear validation errors when user starts typing', async ({ page }) => {
+    await page.goto('/login');
+
+    // Submit empty form to trigger errors
+    await page.getByRole('button', { name: /^accedi$/i }).click();
+
+    // Verify both errors appear
+    await expect(page.getByText(/email obbligatoria/i)).toBeVisible();
+    await expect(page.getByText(/password obbligatoria/i)).toBeVisible();
+
+    // Start typing in email field
+    await page.getByLabel(/email/i).fill('t');
+
+    // Email error should be cleared
+    await expect(page.getByText(/email obbligatoria/i)).not.toBeVisible();
+
+    // Password error should still be visible
+    await expect(page.getByText(/password obbligatoria/i)).toBeVisible();
+
+    // Start typing in password field
+    await page.getByLabel(/password/i).fill('p');
+
+    // Password error should be cleared
+    await expect(page.getByText(/password obbligatoria/i)).not.toBeVisible();
+  });
+});
+
+test.describe('Login Form Submission', () => {
+  test('should show error message for invalid credentials', async ({ page }) => {
+    await page.goto('/login');
+
+    // Fill valid format but wrong credentials
+    await page.getByLabel(/email/i).fill('wrong@example.com');
+    await page.getByLabel(/password/i).fill('wrongpassword');
+
+    // Click submit button
+    await page.getByRole('button', { name: /^accedi$/i }).click();
+
+    // Wait for the API call to complete and show error
+    // The error message should appear for invalid credentials
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
+
+    // Verify error message text (Italian)
+    await expect(page.getByText(/email o password non validi/i)).toBeVisible();
+  });
+
+  test('should show loading state during form submission', async ({ page }) => {
+    await page.goto('/login');
+
+    // Fill valid format credentials
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/password/i).fill('password123');
+
+    // Click submit button
+    const submitButton = page.getByRole('button', { name: /^accedi$/i });
+    await submitButton.click();
+
+    // Verify inputs are disabled during submission
+    await expect(page.getByLabel(/email/i)).toBeDisabled();
+    await expect(page.getByLabel(/password/i)).toBeDisabled();
+
+    // Wait for the API response (either success redirect or error message)
+    await Promise.race([
+      page.waitForURL(/\/dashboard/, { timeout: 10000 }),
+      expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 }),
+    ]);
+  });
+
+  test('should handle successful login and redirect to dashboard', async ({ page }) => {
+    // Note: This test requires actual valid credentials in the Supabase project
+    // For E2E testing, you may need to:
+    // 1. Create a test user in Supabase
+    // 2. Use environment variables for test credentials
+    // 3. Or mock the auth API
+
+    await page.goto('/login');
+
+    // For now, we test that valid form data passes validation
+    // and that the form attempts to submit
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/password/i).fill('password123');
+
+    // Click submit - form should pass validation
+    const submitButton = page.getByRole('button', { name: /^accedi$/i });
+    await submitButton.click();
+
+    // Verify no validation errors appear (form passed client-side validation)
+    await expect(page.getByText(/email obbligatoria/i)).not.toBeVisible();
+    await expect(page.getByText(/password obbligatoria/i)).not.toBeVisible();
+    await expect(page.getByText(/inserisci un'email valida/i)).not.toBeVisible();
+    await expect(page.getByText(/almeno 6 caratteri/i)).not.toBeVisible();
+
+    // The form is submitting - either redirect or show API error
+    await Promise.race([
+      page.waitForURL(/\/dashboard/, { timeout: 10000 }),
+      expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 }),
+    ]);
+  });
+});

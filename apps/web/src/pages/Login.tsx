@@ -4,10 +4,31 @@ import { useAuth, type AuthError } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 /**
+ * Validation constants
+ */
+const PASSWORD_MIN_LENGTH = 6;
+
+/**
+ * Validate email format
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+/**
+ * Form field errors interface
+ */
+interface FormErrors {
+  email?: string;
+  password?: string;
+}
+
+/**
  * LoginPage component - handles user authentication
  *
  * Features:
- * - Email/password login
+ * - Email/password login with client-side validation
  * - Google OAuth login
  * - Loading and error states
  * - Redirect if already authenticated
@@ -17,6 +38,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect to dashboard if already logged in
@@ -33,9 +55,58 @@ export default function Login() {
     );
   }
 
+  /**
+   * Validate form fields
+   * @returns true if all fields are valid
+   */
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    // Validate email format
+    if (!email.trim()) {
+      errors.email = 'Email obbligatoria';
+    } else if (!isValidEmail(email.trim())) {
+      errors.email = 'Inserisci un\'email valida';
+    }
+
+    // Validate password minimum length
+    if (!password) {
+      errors.password = 'Password obbligatoria';
+    } else if (password.length < PASSWORD_MIN_LENGTH) {
+      errors.password = `La password deve contenere almeno ${PASSWORD_MIN_LENGTH} caratteri`;
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  /**
+   * Clear field error when user starts typing
+   */
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (fieldErrors.email) {
+      setFieldErrors((prev) => ({ ...prev, email: undefined }));
+    }
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (fieldErrors.password) {
+      setFieldErrors((prev) => ({ ...prev, password: undefined }));
+    }
+  };
+
   const handleEmailLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -140,13 +211,23 @@ export default function Login() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onChange={(e) => handleEmailChange(e.target.value)}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-1 ${
+                  fieldErrors.email
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                }`}
                 placeholder="tu@esempio.com"
                 disabled={isSubmitting}
+                aria-invalid={fieldErrors.email ? 'true' : 'false'}
+                aria-describedby={fieldErrors.email ? 'email-error' : undefined}
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-600" id="email-error" role="alert">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             <div>
@@ -158,13 +239,23 @@ export default function Login() {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                className={`mt-1 block w-full rounded-md border px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-1 ${
+                  fieldErrors.password
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+                }`}
                 placeholder="Inserisci la password"
                 disabled={isSubmitting}
+                aria-invalid={fieldErrors.password ? 'true' : 'false'}
+                aria-describedby={fieldErrors.password ? 'password-error' : undefined}
               />
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-600" id="password-error" role="alert">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
           </div>
 
