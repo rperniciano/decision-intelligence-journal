@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import healthRoutes from './health.js';
-import decisionsRoutes from './decisions.js';
+import healthRoutes from './health';
+import decisionsRoutes from './decisions';
 
 /**
  * Main routes plugin

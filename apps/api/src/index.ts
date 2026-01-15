@@ -1,7 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
-import routes from './routes/index.js';
+import routes from './routes/index';
 
 // Environment configuration
 const PORT = parseInt(process.env.PORT || '3001', 10);

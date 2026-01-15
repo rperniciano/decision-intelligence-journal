@@ -1,14 +1,30 @@
 import { AssemblyAI } from 'assemblyai';
-import { requireEnvVar } from './index.js';
+import { requireEnvVar } from './index';
 
-const assemblyaiApiKey = requireEnvVar('ASSEMBLYAI_API_KEY');
+let _assemblyai: AssemblyAI | null = null;
 
 /**
- * AssemblyAI client instance configured for Italian transcription
+ * Get or create the AssemblyAI client.
+ * Lazily initialized to allow server startup without env vars for basic routes.
  */
-export const assemblyai = new AssemblyAI({
-  apiKey: assemblyaiApiKey,
-});
+export function getAssemblyAI(): AssemblyAI {
+  if (!_assemblyai) {
+    const assemblyaiApiKey = requireEnvVar('ASSEMBLYAI_API_KEY');
+    _assemblyai = new AssemblyAI({
+      apiKey: assemblyaiApiKey,
+    });
+  }
+  return _assemblyai;
+}
+
+/**
+ * @deprecated Use getAssemblyAI() for lazy initialization
+ */
+export const assemblyai = {
+  get transcripts() {
+    return getAssemblyAI().transcripts;
+  },
+};
 
 /**
  * Default transcription configuration for Italian audio

@@ -1,8 +1,8 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { MultipartFile } from '@fastify/multipart';
 import { randomUUID } from 'crypto';
-import { supabase } from '../lib/supabase.js';
-import { assemblyai, transcriptionConfig } from '../lib/assemblyai.js';
+import { supabase } from '../lib/supabase';
+import { assemblyai, transcriptionConfig } from '../lib/assemblyai';
 
 /**
  * Voice transcription success response
