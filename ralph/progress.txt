@@ -1137,3 +1137,37 @@ Iteration: 1
   - Button type="button" prevents unintended form submissions
   - z-10 on icon ensures it appears above the pulse animation layer
 ---
+
+## 01/16/2026 - US-036
+Iteration: 1
+- What was implemented:
+  - Created RecordingTimer component in src/components/audio/RecordingTimer.tsx
+  - Props: seconds, isActive, className, warningThreshold (default 300s = 5 min)
+  - MM:SS format display using formatTime() utility function
+  - Monospace font (font-mono tabular-nums) to prevent layout shift during counting
+  - Color states: gray-500 (idle), red-500 (active), orange-500 (warning after threshold)
+  - Accessibility: role="timer", aria-live="polite", aria-label with Italian description
+  - Export formatTime utility for potential reuse
+  - Updated audio/index.ts to export RecordingTimer, RecordingTimerProps, and formatTime
+  - Created comprehensive unit test suite (40 tests) in RecordingTimer.test.tsx:
+    - formatTime utility tests (0s, single/double digit seconds, minutes, edge cases)
+    - Rendering tests (container, format, accessibility attributes)
+    - Monospace font tests (font-mono, tabular-nums, text-2xl)
+    - Idle state tests (gray color, stays gray even above threshold)
+    - Active state tests (red color, stays red below threshold)
+    - Warning state tests (orange at exactly 300s, orange after 300s)
+    - Custom warningThreshold tests (lower and higher thresholds)
+    - State transition tests (idle->active, active->warning, warning->idle)
+    - Edge cases (large values, threshold=0)
+- Files changed:
+  - apps/web/src/components/audio/RecordingTimer.tsx (new)
+  - apps/web/src/__tests__/RecordingTimer.test.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+- **Learnings for future iterations:**
+  - Use tabular-nums CSS class for consistent digit width in timers (prevents layout shift)
+  - formatTime utility: Math.floor(seconds / 60) for minutes, seconds % 60 for remaining seconds
+  - padStart(2, '0') ensures double-digit format (00:00)
+  - aria-live="polite" allows screen readers to announce changes without interrupting
+  - role="timer" is appropriate semantic role for countdown/elapsed time displays
+  - Export utility functions separately for reuse (formatTime)
+---
