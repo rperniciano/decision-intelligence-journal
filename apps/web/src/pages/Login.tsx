@@ -4,7 +4,7 @@ import { useAuth, type AuthError } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Login() {
-  const { user, loading, signInWithEmail, signInWithGoogle } = useAuth();
+  const { user, loading, signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +30,7 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      await signInWithEmail(email, password);
+      await signIn(email, password);
       // Navigation will happen automatically via AuthContext state change
     } catch (err) {
       const authError = err as AuthError;

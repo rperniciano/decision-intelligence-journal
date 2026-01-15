@@ -4,7 +4,7 @@ import { useAuth, type AuthError } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Signup() {
-  const { user, loading, signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, loading, signUp, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,7 +49,7 @@ export default function Signup() {
     setIsSubmitting(true);
 
     try {
-      await signUpWithEmail(email, password);
+      await signUp(email, password);
       // Navigation will happen automatically via AuthContext state change
     } catch (err) {
       const authError = err as AuthError;
