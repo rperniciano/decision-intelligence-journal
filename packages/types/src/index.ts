@@ -31,3 +31,6 @@ export * from './database';
 
 // Re-export types from decision module
 export * from './decision';
+
+// Re-export types from decision-option module
+export * from './decision-option';
