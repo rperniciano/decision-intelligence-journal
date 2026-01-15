@@ -743,8 +743,8 @@
         "Test unitario per servizio (mock fetch)"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: audioService with uploadAudio(), useUploadAudio hook with states, RecordDecisionPage integration, loading/error states with Italian messages, 19+12 unit tests"
     },
     {
       "id": "US-042",

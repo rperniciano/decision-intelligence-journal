@@ -1348,3 +1348,47 @@ Iteration: 1
   - Supabase storage.from().getPublicUrl() returns { data: { publicUrl } }
   - AudioUploadResponse type was already defined in @decisions/types/src/api.ts
 ---
+
+## 01/16/2026 - US-041
+Iteration: 1
+- What was implemented:
+  - Created audioService in apps/web/src/services/audio.ts:
+    - uploadAudio(blob, accessToken) function for API communication
+    - AudioUploadError class with typed error codes
+    - Italian error messages for user-friendly display
+    - Validates: no file, file size (10MB), MIME types (webm, mp4, mpeg, wav)
+    - Handles HTTP errors: 401, 413, 415, 500
+  - Created useUploadAudio hook in apps/web/src/hooks/useUploadAudio.ts:
+    - States: idle, uploading, success, error
+    - Returns: state, isUploading, result, error, progress, upload, reset
+    - Gets access token from AuthContext session
+    - User-friendly Italian error messages
+  - Updated RecordDecisionPage.tsx:
+    - Added 'uploading' to PageState union
+    - Integrated useUploadAudio hook
+    - handleContinue calls upload() with audioBlob
+    - Added SpinnerIcon component for loading state
+    - Continue button shows spinner and "Caricamento..." during upload
+    - All buttons disabled during upload
+    - Error state shows red icon and Italian error message
+    - Footer text updates for each state
+  - Created comprehensive unit tests:
+    - audioService.test.ts: 19 tests for service functionality
+    - useUploadAudio.test.ts: 12 tests for hook behavior
+    - Updated RecordDecisionPage.test.tsx: mocked useAuth and useUploadAudio
+- Files changed:
+  - apps/web/src/services/audio.ts (new)
+  - apps/web/src/hooks/useUploadAudio.ts (new)
+  - apps/web/src/pages/RecordDecisionPage.tsx (modified)
+  - apps/web/src/__tests__/audioService.test.ts (new)
+  - apps/web/src/__tests__/useUploadAudio.test.ts (new)
+  - apps/web/src/__tests__/RecordDecisionPage.test.tsx (modified)
+- **Learnings for future iterations:**
+  - Components using useAuth() need AuthContext mocked in tests
+  - Use vi.mock() for hooks at module level before tests run
+  - FormData append with filename: formData.append('audio', blob, 'recording.webm')
+  - Session access token at session.access_token
+  - useCallback with async functions work correctly in React
+  - Italian error messages improve UX for target audience
+  - RecordDecisionPage now has 'uploading' state for visual feedback
+---
