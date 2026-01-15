@@ -13,9 +13,10 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   /**
    * Sign up with email and password.
+   * Optionally pass a display name to store in user metadata.
    * Alias: signUpWithEmail
    */
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   /**
    * Sign in with Google OAuth.
    * Redirects to Google for authorization.
@@ -63,10 +64,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, displayName?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: displayName
+        ? {
+            data: {
+              display_name: displayName,
+            },
+          }
+        : undefined,
     });
     if (error) {
       throw error;
