@@ -131,7 +131,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
   // Timer for recording duration
   useEffect(() => {
-    if (!isRecording || isPaused) return;
+    if (!isRecording || isPaused) {
+      return;
+    }
 
     const interval = setInterval(() => {
       setDuration((prev) => prev + 1);

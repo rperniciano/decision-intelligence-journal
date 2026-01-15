@@ -1,0 +1,1478 @@
+{
+	"project": "Decisions",
+	"branchName": "decisions/mvp-decision-intelligence-journal",
+	"description": "MVP del Decision Intelligence Journal - App voice-first che cattura decisioni, le trascrive con AI, estrae pattern e aiuta gli utenti a prendere decisioni migliori nel tempo",
+	"globalRequirements": {
+		"beforeImplementation": [
+			"Consultare context7 per documentazione del framework/libreria in uso",
+			"Leggere i file README.md e ARCHITECTURE.md se presenti",
+			"Verificare le dipendenze già installate nel package.json appropriato"
+		],
+		"afterImplementation": [
+			"pnpm build passa senza errori in tutti i packages",
+			"pnpm lint passa senza errori",
+			"pnpm test passa per i test relativi alla story",
+			"Verificare manualmente la funzionalità se è UI",
+			"Verificare con Supabase MCP che tabelle/dati esistano (se ci sono migrazioni)",
+			"Test E2E con Playwright passano (se ci sono test E2E per la story)"
+		]
+	},
+	"userStories": [
+		{
+			"id": "US-001",
+			"title": "Inizializzazione Monorepo Turborepo",
+			"description": "Come sviluppatore, ho bisogno della struttura base del monorepo Turborepo con pnpm workspaces.",
+			"acceptanceCriteria": [
+				"Consultare context7: Turborepo getting started e pnpm workspaces",
+				"Directory root con package.json che definisce workspaces: ['apps/*', 'packages/*']",
+				"turbo.json configurato con pipeline: build, dev, lint, test",
+				"pnpm-workspace.yaml presente e configurato",
+				".gitignore con node_modules, dist, .turbo, .env*",
+				".nvmrc con versione Node.js 20.x",
+				"Comando 'pnpm install' eseguito con successo",
+				"Comando 'pnpm turbo --version' funziona"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-002",
+			"title": "Setup App Frontend (Vite + React + TypeScript)",
+			"description": "Come sviluppatore, ho bisogno dell'app frontend configurata con Vite, React e TypeScript.",
+			"acceptanceCriteria": [
+				"Consultare context7: Vite React TypeScript template",
+				"Directory apps/web creata con Vite: pnpm create vite@latest web --template react-ts",
+				"package.json in apps/web con name '@decisions/web'",
+				"tsconfig.json con strict mode abilitato",
+				"vite.config.ts con port 5173 e proxy per /api verso localhost:3001",
+				"Comando 'pnpm --filter @decisions/web dev' avvia il server",
+				"Browser su http://localhost:5173 mostra pagina React default",
+				"Comando 'pnpm --filter @decisions/web build' passa senza errori"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-003",
+			"title": "Setup App Backend (Fastify + TypeScript)",
+			"description": "Come sviluppatore, ho bisogno dell'app backend configurata con Fastify e TypeScript.",
+			"acceptanceCriteria": [
+				"Consultare context7: Fastify TypeScript setup",
+				"Directory apps/api creata",
+				"package.json con name '@decisions/api' e dipendenze: fastify, @fastify/cors, @fastify/env, tsx",
+				"tsconfig.json con target ES2022, moduleResolution bundler",
+				"src/index.ts con server Fastify base che ascolta su port 3001",
+				"src/routes/health.ts con endpoint GET /health che ritorna { status: 'ok', timestamp: Date }",
+				"Script 'dev' che usa tsx watch src/index.ts",
+				"Comando 'pnpm --filter @decisions/api dev' avvia il server",
+				"Curl http://localhost:3001/health ritorna 200 con JSON corretto"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-004",
+			"title": "Configurazione Tailwind CSS",
+			"description": "Come sviluppatore, ho bisogno di Tailwind CSS configurato nel frontend.",
+			"acceptanceCriteria": [
+				"Consultare context7: Tailwind CSS Vite installation",
+				"Dipendenze installate: tailwindcss, postcss, autoprefixer",
+				"tailwind.config.js con content che punta a './src/**/*.{ts,tsx}'",
+				"postcss.config.js configurato",
+				"src/index.css con direttive @tailwind base/components/utilities",
+				"Creare componente test in App.tsx con classi Tailwind (es. bg-blue-500 text-white p-4 rounded)",
+				"Verificare visivamente che gli stili Tailwind sono applicati",
+				"Build passa senza errori"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-005",
+			"title": "Package Condiviso: Types",
+			"description": "Come sviluppatore, ho bisogno di un package condiviso per i tipi TypeScript.",
+			"acceptanceCriteria": [
+				"Directory packages/types creata",
+				"package.json con name '@decisions/types', main: './dist/index.js', types: './dist/index.d.ts'",
+				"tsconfig.json con declaration: true, emitDeclarationOnly: false",
+				"src/index.ts che esporta tipi base (placeholder): export interface User { id: string; email: string; }",
+				"Script 'build' con tsc",
+				"Aggiungere @decisions/types come dipendenza in @decisions/web e @decisions/api",
+				"Import funziona da entrambe le app: import { User } from '@decisions/types'",
+				"pnpm build dalla root compila tutti i packages"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-006",
+			"title": "Configurazione ESLint + Prettier",
+			"description": "Come sviluppatore, ho bisogno di linting e formatting consistente in tutto il monorepo.",
+			"acceptanceCriteria": [
+				"Consultare context7: ESLint flat config, Prettier",
+				"Root: eslint.config.js con configurazione flat per TypeScript e React",
+				"Root: .prettierrc con singleQuote: true, semi: true, tabWidth: 2",
+				"Root: .prettierignore con dist, node_modules, .turbo",
+				"Script 'lint' in root package.json che esegue turbo lint",
+				"Script 'format' in root che esegue prettier --write",
+				"Turbo pipeline include 'lint'",
+				"pnpm lint passa senza errori su tutto il codebase",
+				"pnpm format formatta i file correttamente"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-007",
+			"title": "Configurazione Vitest per Unit Testing",
+			"description": "Come sviluppatore, ho bisogno di Vitest configurato per unit testing.",
+			"acceptanceCriteria": [
+				"Consultare context7: Vitest configuration",
+				"Dipendenza vitest installata in root e nelle app",
+				"vitest.config.ts in apps/web con environment: 'jsdom', globals: true",
+				"vitest.config.ts in apps/api con environment: 'node'",
+				"@testing-library/react e @testing-library/jest-dom installati in apps/web",
+				"Test placeholder in apps/web/src/__tests__/App.test.tsx che verifica rendering",
+				"Test placeholder in apps/api/src/__tests__/health.test.ts",
+				"Script 'test' in ogni app che esegue vitest",
+				"Turbo pipeline include 'test'",
+				"pnpm test passa su tutto il monorepo"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-008",
+			"title": "Configurazione Playwright per E2E Testing",
+			"description": "Come sviluppatore, ho bisogno di Playwright configurato per E2E testing.",
+			"acceptanceCriteria": [
+				"Consultare context7: Playwright configuration",
+				"Directory apps/e2e creata",
+				"package.json con @playwright/test",
+				"playwright.config.ts con baseURL http://localhost:5173, webServer che avvia frontend e backend",
+				"tests/example.spec.ts con test base che naviga a / e verifica elemento",
+				"Script 'test:e2e' in root che esegue playwright test",
+				"pnpm --filter @decisions/e2e test passa (con app running)",
+				"Report HTML generato in playwright-report/"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-009",
+			"title": "Configurazione Environment Variables",
+			"description": "Come sviluppatore, ho bisogno di gestione environment variables sicura.",
+			"acceptanceCriteria": [
+				"File .env.example in root con tutte le variabili necessarie (valori placeholder)",
+				"File .env.example in apps/api con: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY, ASSEMBLYAI_API_KEY, OPENAI_API_KEY, PORT=3001",
+				"File .env.example in apps/web con: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_API_URL=http://localhost:3001",
+				"@fastify/env configurato in apps/api per validare variabili",
+				"Schema Zod per validazione env in apps/api/src/config/env.ts",
+				"Documentazione in README.md su come configurare le variabili",
+				".gitignore include .env e .env.local"
+			],
+			"priority": 1,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-010",
+			"title": "Setup Progetto Supabase",
+			"description": "Come sviluppatore, ho bisogno del progetto Supabase configurato e collegato.",
+			"acceptanceCriteria": [
+				"Consultare context7: Supabase JavaScript client setup",
+				"Dipendenza @supabase/supabase-js installata in apps/web e apps/api",
+				"packages/supabase creato con client factory e tipi",
+				"packages/supabase/src/client.ts esporta createClient configurabile",
+				"apps/web/src/lib/supabase.ts crea client con variabili VITE_",
+				"apps/api/src/lib/supabase.ts crea client admin con service key",
+				"Test connessione: query a pg_tables funziona",
+				"Verificare con Supabase MCP: connessione al database funziona"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-011",
+			"title": "Schema Database: Tabella Users Profile",
+			"description": "Come sviluppatore, ho bisogno della tabella profili utente.",
+			"acceptanceCriteria": [
+				"Consultare context7: Supabase database schema, RLS policies",
+				"File SQL migration: supabase/migrations/001_users_profile.sql",
+				"Tabella 'DecisionsUserProfiles' con campi: id (uuid PK riferimento auth.users), display_name (text), avatar_url (text nullable), onboarding_completed (boolean default false), created_at (timestamptz), updated_at (timestamptz)",
+				"RLS abilitato sulla tabella",
+				"Policy SELECT: utente può vedere solo il proprio profilo",
+				"Policy INSERT: utente può creare solo il proprio profilo",
+				"Policy UPDATE: utente può modificare solo il proprio profilo",
+				"Trigger per updated_at automatico",
+				"Migration eseguita su Supabase",
+				"Verificare con Supabase MCP: SELECT * FROM \"DecisionsUserProfiles\" non dà errore"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-012",
+			"title": "Schema Database: Enum DecisionStatus",
+			"description": "Come sviluppatore, ho bisogno dell'enum per gli stati delle decisioni.",
+			"acceptanceCriteria": [
+				"File SQL migration: supabase/migrations/002_enums.sql",
+				"Tipo ENUM 'decision_status' creato con valori: 'draft', 'in_progress', 'decided', 'outcome_recorded'",
+				"Tipo ENUM 'outcome_rating' creato con valori: 'better_than_expected', 'as_expected', 'worse_than_expected'",
+				"Tipo ENUM 'decision_category' creato con valori: 'career', 'financial', 'relationship', 'health', 'lifestyle', 'other'",
+				"Migration eseguita su Supabase",
+				"Verificare con Supabase MCP: SELECT enum_range(NULL::decision_status) ritorna i valori corretti",
+				"Tipi TypeScript corrispondenti in packages/types/src/enums.ts"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-013",
+			"title": "Schema Database: Tabella Decisions",
+			"description": "Come sviluppatore, ho bisogno della tabella principale per le decisioni.",
+			"acceptanceCriteria": [
+				"File SQL migration: supabase/migrations/003_decisions.sql",
+				"Tabella 'DecisionsDecisions' con campi: id (uuid PK default gen_random_uuid()), user_id (uuid FK auth.users NOT NULL), title (text NOT NULL), description (text), status (decision_status default 'draft'), category (decision_category default 'other'), emotional_state (text nullable), audio_url (text nullable), transcript (text nullable), decided_at (timestamptz nullable), created_at (timestamptz default now()), updated_at (timestamptz default now())",
+				"Indici su: user_id, status, category, created_at",
+				"RLS abilitato: utente vede/modifica solo le proprie decisioni",
+				"Trigger per updated_at automatico",
+				"Migration eseguita",
+				"Verificare con Supabase MCP: struttura tabella corretta",
+				"Tipo TypeScript Decision in packages/types/src/decision.ts"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-014",
+			"title": "Schema Database: Tabella DecisionOptions",
+			"description": "Come sviluppatore, ho bisogno della tabella per le opzioni di ogni decisione.",
+			"acceptanceCriteria": [
+				"File SQL migration: supabase/migrations/004_decision_options.sql",
+				"Tabella 'DecisionsDecisionOptions' con campi: id (uuid PK), decision_id (uuid FK DecisionsDecisions ON DELETE CASCADE), title (text NOT NULL), description (text nullable), is_chosen (boolean default false), order_index (integer default 0), created_at, updated_at",
+				"Indice su decision_id",
+				"RLS: accesso basato su ownership della decision parent",
+				"Migration eseguita",
+				"Verificare con Supabase MCP: FK constraint funziona",
+				"Tipo TypeScript DecisionOption in packages/types"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-015",
+			"title": "Schema Database: Tabella OptionProsCons",
+			"description": "Come sviluppatore, ho bisogno della tabella per pro/contro di ogni opzione.",
+			"acceptanceCriteria": [
+				"File SQL migration: supabase/migrations/005_option_pros_cons.sql",
+				"Tabella 'DecisionsOptionProsCons' con campi: id (uuid PK), option_id (uuid FK DecisionsDecisionOptions ON DELETE CASCADE), content (text NOT NULL), is_pro (boolean NOT NULL), weight (integer default 1, range 1-5), order_index (integer default 0), created_at, updated_at",
+				"Indice su option_id",
+				"RLS basato su ownership chain (option -> decision -> user)",
+				"Migration eseguita",
+				"Verificare con Supabase MCP",
+				"Tipo TypeScript OptionProCon in packages/types"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-016",
+			"title": "Schema Database: Tabella DecisionOutcomes",
+			"description": "Come sviluppatore, ho bisogno della tabella per registrare gli outcome delle decisioni.",
+			"acceptanceCriteria": [
+				"File SQL migration: supabase/migrations/006_decision_outcomes.sql",
+				"Tabella 'DecisionsDecisionOutcomes' con campi: id (uuid PK), decision_id (uuid FK UNIQUE DecisionsDecisions), rating (outcome_rating NOT NULL), notes (text nullable), audio_url (text nullable), transcript (text nullable), recorded_at (timestamptz default now()), created_at, updated_at",
+				"UNIQUE constraint su decision_id (una decisione ha un solo outcome)",
+				"RLS basato su ownership della decision",
+				"Migration eseguita",
+				"Verificare con Supabase MCP",
+				"Tipo TypeScript DecisionOutcome in packages/types"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-017",
+			"title": "Schema Database: Tabella FollowUpReminders",
+			"description": "Come sviluppatore, ho bisogno della tabella per i reminder di follow-up.",
+			"acceptanceCriteria": [
+				"File SQL migration: supabase/migrations/007_followup_reminders.sql",
+				"Tabella 'DecisionsFollowUpReminders' con campi: id (uuid PK), decision_id (uuid FK DecisionsDecisions ON DELETE CASCADE), scheduled_for (timestamptz NOT NULL), sent_at (timestamptz nullable), is_dismissed (boolean default false), created_at, updated_at",
+				"Indici su: decision_id, scheduled_for, sent_at",
+				"RLS basato su ownership",
+				"Migration eseguita",
+				"Verificare con Supabase MCP",
+				"Tipo TypeScript FollowUpReminder in packages/types"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-018",
+			"title": "Tipi TypeScript Completi per Database",
+			"description": "Come sviluppatore, ho bisogno di tutti i tipi TypeScript sincronizzati con lo schema DB.",
+			"acceptanceCriteria": [
+				"packages/types/src/database.ts con tutti i tipi delle tabelle",
+				"packages/types/src/enums.ts con tutti gli enum come union types",
+				"packages/types/src/api.ts con tipi per request/response API",
+				"packages/types/src/index.ts che re-esporta tutto",
+				"Tipi includono: User, UserProfile, Decision, DecisionOption, OptionProCon, DecisionOutcome, FollowUpReminder",
+				"Tipi request: CreateDecisionRequest, UpdateDecisionRequest, RecordOutcomeRequest",
+				"Tipi response: DecisionResponse, DecisionListResponse, ApiError",
+				"pnpm build in packages/types passa",
+				"Import funziona in apps/web e apps/api"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-019",
+			"title": "Supabase Storage Bucket per Audio",
+			"description": "Come sviluppatore, ho bisogno di un bucket Storage per i file audio.",
+			"acceptanceCriteria": [
+				"Consultare context7: Supabase Storage setup",
+				"Bucket 'decision-audio' creato (può essere via dashboard o migration)",
+				"Policy: utenti autenticati possono uploadare in proprio folder (user_id/)",
+				"Policy: utenti possono leggere solo i propri file",
+				"Limite file: 10MB, tipi accettati: audio/webm, audio/mp4, audio/mpeg, audio/wav",
+				"Verificare con Supabase MCP: bucket esiste e policies sono configurate",
+				"Test upload manuale funziona"
+			],
+			"priority": 2,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-020",
+			"title": "Backend: Configurazione Supabase Auth",
+			"description": "Come sviluppatore, ho bisogno del backend configurato per validare JWT Supabase.",
+			"acceptanceCriteria": [
+				"Consultare context7: Fastify JWT validation, Supabase Auth",
+				"Plugin @fastify/jwt configurato con secret da SUPABASE_JWT_SECRET",
+				"Decoratore 'authenticate' che valida token Bearer",
+				"Hook preHandler per routes protette",
+				"Tipo FastifyRequest esteso con user: { id: string, email: string }",
+				"Route test GET /api/me che ritorna user info (protetta)",
+				"Test con token valido ritorna 200",
+				"Test senza token ritorna 401",
+				"Test con token invalido ritorna 401"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-021",
+			"title": "Frontend: Supabase Auth Provider Setup",
+			"description": "Come sviluppatore, ho bisogno del context React per gestire l'autenticazione.",
+			"acceptanceCriteria": [
+				"Consultare context7: Supabase Auth React, React Context",
+				"src/contexts/AuthContext.tsx con AuthProvider",
+				"Hook useAuth() che espone: user, session, loading, signIn, signUp, signOut, signInWithGoogle",
+				"Listener onAuthStateChange per sync stato",
+				"Persistenza sessione gestita da Supabase automaticamente",
+				"Test unitario per AuthContext (mock Supabase client)",
+				"Provider wrappa App in main.tsx"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-022",
+			"title": "Frontend: Pagina di Login UI",
+			"description": "Come utente, voglio vedere una pagina di login pulita e accogliente.",
+			"acceptanceCriteria": [
+				"Route /login con componente LoginPage",
+				"UI minimale: logo/nome app, campo email, campo password, bottone 'Accedi'",
+				"Bottone 'Accedi con Google' separato",
+				"Link 'Non hai un account? Registrati' che porta a /register",
+				"Design responsive (mobile-first)",
+				"Stati: idle, loading (spinner su bottone), error (messaggio rosso)",
+				"Redirect a /dashboard se già autenticato",
+				"Test unitario per rendering componente",
+				"Screenshot test con Playwright"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-023",
+			"title": "Frontend: Funzionalità Login Email/Password",
+			"description": "Come utente, voglio poter accedere con email e password.",
+			"acceptanceCriteria": [
+				"Form validation: email formato valido, password min 6 caratteri",
+				"Submit chiama supabase.auth.signInWithPassword",
+				"Successo: redirect a /dashboard",
+				"Errore credenziali: mostra messaggio 'Email o password non validi'",
+				"Errore network: mostra messaggio 'Errore di connessione'",
+				"Loading state durante chiamata",
+				"Test E2E Playwright: login con credenziali valide",
+				"Test E2E Playwright: login con credenziali invalide mostra errore"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-024",
+			"title": "Frontend: Funzionalità Login Google OAuth",
+			"description": "Come utente, voglio poter accedere con il mio account Google.",
+			"acceptanceCriteria": [
+				"Consultare context7: Supabase Google OAuth setup",
+				"Click su 'Accedi con Google' chiama supabase.auth.signInWithOAuth({ provider: 'google' })",
+				"Redirect a Google per autorizzazione",
+				"Callback gestito da Supabase, redirect a /dashboard",
+				"Errore OAuth: mostra messaggio appropriato",
+				"Test E2E: verificare che click apre popup/redirect Google (mock per CI)"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-025",
+			"title": "Frontend: Pagina di Registrazione UI",
+			"description": "Come nuovo utente, voglio poter creare un account.",
+			"acceptanceCriteria": [
+				"Route /register con componente RegisterPage",
+				"UI: campo nome (opzionale), campo email, campo password, campo conferma password",
+				"Bottone 'Crea Account'",
+				"Bottone 'Registrati con Google'",
+				"Link 'Hai già un account? Accedi' che porta a /login",
+				"Design coerente con LoginPage",
+				"Test unitario per rendering"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-026",
+			"title": "Frontend: Funzionalità Registrazione",
+			"description": "Come nuovo utente, voglio completare la registrazione con email.",
+			"acceptanceCriteria": [
+				"Validation: email valida, password min 8 char con numero, password match",
+				"Submit chiama supabase.auth.signUp",
+				"Successo: mostra messaggio 'Controlla la tua email per confermare'",
+				"Se email confirmation disabilitato: redirect a /onboarding",
+				"Errore email esistente: mostra messaggio appropriato",
+				"Test E2E Playwright: registrazione completa flow"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-027",
+			"title": "Backend: Endpoint Creazione Profilo Utente",
+			"description": "Come sistema, devo creare il profilo utente dopo la registrazione.",
+			"acceptanceCriteria": [
+				"POST /api/users/profile endpoint",
+				"Body: { displayName?: string }",
+				"Crea record in DecisionsUserProfiles con user_id da JWT",
+				"Se profilo esiste già: ritorna 409 Conflict",
+				"Successo: ritorna 201 con profilo creato",
+				"Test integrazione con Supabase reale",
+				"Verificare con Supabase MCP: record creato correttamente"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-028",
+			"title": "Backend: Endpoint Get Profilo Utente",
+			"description": "Come utente autenticato, voglio recuperare il mio profilo.",
+			"acceptanceCriteria": [
+				"GET /api/users/profile endpoint (protetto)",
+				"Ritorna profilo dell'utente autenticato",
+				"Se profilo non esiste: ritorna 404",
+				"Response include: id, displayName, avatarUrl, onboardingCompleted, createdAt",
+				"Test unitario per handler",
+				"Test integrazione"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-029",
+			"title": "Frontend: Protected Route Component",
+			"description": "Come sviluppatore, ho bisogno di un componente per proteggere le route.",
+			"acceptanceCriteria": [
+				"Componente ProtectedRoute che wrappa children",
+				"Se non autenticato: redirect a /login",
+				"Se autenticato: renderizza children",
+				"Loading state mentre verifica auth",
+				"Usa useAuth() hook",
+				"Test unitario con mock auth context"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-030",
+			"title": "Frontend: Logout Funzionalità",
+			"description": "Come utente, voglio poter uscire dal mio account.",
+			"acceptanceCriteria": [
+				"Bottone logout nel header/menu (placeholder, sarà in dashboard)",
+				"Click chiama supabase.auth.signOut()",
+				"Successo: redirect a /login",
+				"Pulisce stato locale",
+				"Test E2E: logout flow completo"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-031",
+			"title": "Frontend: Layout Base con Header",
+			"description": "Come utente, voglio un layout consistente con header.",
+			"acceptanceCriteria": [
+				"Componente Layout che wrappa le pagine autenticate",
+				"Header con: logo/nome app, avatar utente (o iniziali), menu dropdown",
+				"Menu dropdown con: 'Profilo', 'Impostazioni', 'Logout'",
+				"Main content area con padding appropriato",
+				"Mobile: header sticky, menu hamburger",
+				"Design pulito, minimal",
+				"Test unitario per rendering"
+			],
+			"priority": 3,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-032",
+			"title": "Frontend: Hook useMediaRecorder Base",
+			"description": "Come sviluppatore, ho bisogno di un hook per gestire MediaRecorder API.",
+			"acceptanceCriteria": [
+				"Consultare context7: MediaRecorder API, Web Audio API",
+				"Hook useMediaRecorder in src/hooks/useMediaRecorder.ts",
+				"Espone: startRecording, stopRecording, pauseRecording, resumeRecording",
+				"Espone: isRecording, isPaused, recordingTime, error",
+				"Espone: audioBlob (dopo stop)",
+				"Richiede permesso microfono se non già concesso",
+				"Gestisce errore se permesso negato",
+				"Formato output: audio/webm (fallback audio/mp4)",
+				"Test unitario con mock MediaRecorder"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-033",
+			"title": "Frontend: Hook useAudioAnalyser per Waveform",
+			"description": "Come sviluppatore, ho bisogno di analizzare l'audio per visualizzare la waveform.",
+			"acceptanceCriteria": [
+				"Consultare context7: Web Audio API AnalyserNode",
+				"Hook useAudioAnalyser in src/hooks/useAudioAnalyser.ts",
+				"Input: MediaStream",
+				"Output: frequencyData (Uint8Array), timeData (Uint8Array)",
+				"Usa AudioContext + AnalyserNode",
+				"Aggiorna dati via requestAnimationFrame",
+				"Cleanup corretto su unmount",
+				"Test unitario con mock AudioContext"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-034",
+			"title": "Frontend: Componente WaveformVisualizer",
+			"description": "Come utente, voglio vedere una visualizzazione dell'audio mentre registro.",
+			"acceptanceCriteria": [
+				"Componente WaveformVisualizer in src/components/audio/",
+				"Props: frequencyData, isActive, className",
+				"Renderizza canvas con barre verticali animate",
+				"Stile: barre colorate (gradient blue/purple), altezza proporzionale a frequenza",
+				"Animazione fluida a 60fps",
+				"Stato idle: barre a altezza minima",
+				"Responsive: si adatta al container",
+				"Test unitario per rendering"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-035",
+			"title": "Frontend: Componente RecordButton",
+			"description": "Come utente, voglio un bottone grande e chiaro per registrare.",
+			"acceptanceCriteria": [
+				"Componente RecordButton in src/components/audio/",
+				"Props: onStart, onStop, isRecording, isDisabled",
+				"UI: bottone circolare grande (80px), icona microfono",
+				"Stato idle: sfondo grigio chiaro, icona scura",
+				"Stato recording: sfondo rosso pulsante, icona bianca",
+				"Animazione pulse durante recording",
+				"Touch-friendly (min 44px touch target)",
+				"Accessibile: aria-label, focus visible",
+				"Test unitario per stati"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-036",
+			"title": "Frontend: Componente RecordingTimer",
+			"description": "Come utente, voglio vedere quanto tempo sto registrando.",
+			"acceptanceCriteria": [
+				"Componente RecordingTimer in src/components/audio/",
+				"Props: seconds, isActive",
+				"Formato display: MM:SS (es. 01:23)",
+				"Colore: grigio quando idle, rosso quando active",
+				"Font monospace per evitare layout shift",
+				"Limite visivo: mostra warning dopo 5 minuti (colore arancione)",
+				"Test unitario per formatting"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-037",
+			"title": "Frontend: Componente VoiceRecorder Composto",
+			"description": "Come utente, voglio un'interfaccia completa per la registrazione vocale.",
+			"acceptanceCriteria": [
+				"Componente VoiceRecorder in src/components/audio/",
+				"Compone: RecordButton, RecordingTimer, WaveformVisualizer",
+				"Props: onRecordingComplete(blob), maxDuration (default 300s)",
+				"Stati: idle, requesting_permission, recording, stopped",
+				"Mostra errore se permesso microfono negato",
+				"Auto-stop quando raggiunge maxDuration",
+				"Callback onRecordingComplete passa audioBlob",
+				"Layout: centrato, minimal, focus sul bottone",
+				"Test unitario per flow stati"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-038",
+			"title": "Frontend: Pagina Record Decision UI",
+			"description": "Come utente, voglio una pagina dedicata per registrare una decisione.",
+			"acceptanceCriteria": [
+				"Route /record con componente RecordDecisionPage",
+				"Protetta da ProtectedRoute",
+				"UI minimale: titolo 'Parla della tua decisione', VoiceRecorder centrato",
+				"Sottotitolo hint: 'Descrivi la situazione, le opzioni che stai considerando...'",
+				"Dopo recording: mostra preview con player audio e bottoni 'Riascolta', 'Riprova', 'Continua'",
+				"Bottone 'Continua' porta a step successivo (placeholder)",
+				"Mobile-first, schermo intero occupato da recorder",
+				"Test E2E: navigazione a pagina"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-039",
+			"title": "Frontend: Componente AudioPlayer",
+			"description": "Come utente, voglio poter riascoltare la mia registrazione.",
+			"acceptanceCriteria": [
+				"Componente AudioPlayer in src/components/audio/",
+				"Props: src (url o blob), onEnded",
+				"Controlli: play/pause, progress bar, tempo corrente/totale",
+				"Click su progress bar: seek a posizione",
+				"Stile: compatto, orizzontale",
+				"Accessibile: keyboard controls",
+				"Test unitario per controlli"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-040",
+			"title": "Backend: Endpoint Upload Audio",
+			"description": "Come sistema, devo poter caricare file audio su Supabase Storage.",
+			"acceptanceCriteria": [
+				"Consultare context7: Fastify multipart, Supabase Storage upload",
+				"POST /api/audio/upload endpoint (protetto)",
+				"Accetta multipart/form-data con campo 'audio'",
+				"Validazione: tipo file (audio/*), dimensione max 10MB",
+				"Upload su bucket 'decision-audio' con path: {user_id}/{uuid}.webm",
+				"Ritorna: { url: string, path: string, size: number }",
+				"Errore se file troppo grande: 413",
+				"Errore se tipo non valido: 415",
+				"Test integrazione con Supabase Storage"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-041",
+			"title": "Frontend: Integrazione Upload Audio",
+			"description": "Come utente, voglio che il mio audio venga salvato automaticamente.",
+			"acceptanceCriteria": [
+				"Servizio audioService in src/services/audio.ts",
+				"Funzione uploadAudio(blob): Promise<{ url, path }>",
+				"Usa fetch con FormData per multipart",
+				"Gestisce errori con messaggi user-friendly",
+				"Hook useUploadAudio con stati: idle, uploading, success, error",
+				"Progress tracking se possibile",
+				"RecordDecisionPage integra upload dopo 'Continua'",
+				"Loading state durante upload",
+				"Test unitario per servizio (mock fetch)"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-042",
+			"title": "E2E Test: Flow Recording Completo",
+			"description": "Come QA, ho bisogno di testare il flow di recording end-to-end.",
+			"acceptanceCriteria": [
+				"Test Playwright in apps/e2e/tests/recording.spec.ts",
+				"Test: utente naviga a /record",
+				"Test: click su record button richiede permesso (mock)",
+				"Test: durante recording mostra timer e waveform",
+				"Test: stop recording mostra preview",
+				"Test: click 'Continua' triggera upload (mock API)",
+				"Test: gestisce errore upload gracefully",
+				"Tutti i test passano in CI"
+			],
+			"priority": 4,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-043",
+			"title": "Backend: Service Assembly.AI Mock",
+			"description": "Come sviluppatore, ho bisogno di un servizio mock per la trascrizione.",
+			"acceptanceCriteria": [
+				"Service src/services/transcription/index.ts con interfaccia TranscriptionService",
+				"Interfaccia: transcribe(audioUrl): Promise<TranscriptionResult>",
+				"TranscriptionResult: { text: string, confidence: number, words: Word[] }",
+				"Implementazione MockTranscriptionService che ritorna testo predefinito",
+				"Mock simula delay di 2-3 secondi",
+				"Factory getTranscriptionService() che ritorna mock o real basato su env",
+				"Test unitario per mock service"
+			],
+			"priority": 5,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-044",
+			"title": "Backend: Service Assembly.AI Reale",
+			"description": "Come sviluppatore, ho bisogno dell'integrazione reale con Assembly.AI.",
+			"acceptanceCriteria": [
+				"Consultare context7: Assembly.AI API documentation",
+				"Implementazione AssemblyAITranscriptionService",
+				"Usa Assembly.AI SDK o REST API",
+				"Flow: upload audio -> create transcription -> poll status -> get result",
+				"Gestisce timeout (max 5 minuti)",
+				"Gestisce errori API con retry (max 3)",
+				"Mappa response a TranscriptionResult",
+				"Test integrazione (skip in CI se no API key)"
+			],
+			"priority": 5,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-045",
+			"title": "Backend: Endpoint Transcription",
+			"description": "Come sistema, devo poter richiedere la trascrizione di un audio.",
+			"acceptanceCriteria": [
+				"POST /api/transcription endpoint (protetto)",
+				"Body: { audioUrl: string } o { audioPath: string }",
+				"Valida che audio appartenga all'utente",
+				"Chiama TranscriptionService.transcribe()",
+				"Ritorna: { text: string, confidence: number }",
+				"Gestisce errore transcription: 502 Bad Gateway",
+				"Test con mock service"
+			],
+			"priority": 5,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-046",
+			"title": "Frontend: Hook useTranscription",
+			"description": "Come sviluppatore, ho bisogno di un hook per gestire la trascrizione.",
+			"acceptanceCriteria": [
+				"Hook useTranscription in src/hooks/useTranscription.ts",
+				"Funzione: transcribe(audioUrl): Promise<string>",
+				"Stati: idle, transcribing, success, error",
+				"Espone: transcript, isTranscribing, error, transcribe",
+				"Polling status se necessario (per API async)",
+				"Test unitario con mock API"
+			],
+			"priority": 5,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-047",
+			"title": "Frontend: Componente TranscriptionDisplay",
+			"description": "Come utente, voglio vedere la trascrizione del mio audio.",
+			"acceptanceCriteria": [
+				"Componente TranscriptionDisplay in src/components/transcription/",
+				"Props: text, isLoading, error",
+				"Loading: skeleton text animato",
+				"Success: testo con buona leggibilità, scrollabile se lungo",
+				"Error: messaggio con opzione retry",
+				"Stile: card con padding, font leggibile",
+				"Test unitario per stati"
+			],
+			"priority": 5,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-048",
+			"title": "Frontend: Step Trascrizione in Flow Recording",
+			"description": "Come utente, dopo aver registrato voglio vedere la trascrizione.",
+			"acceptanceCriteria": [
+				"RecordDecisionPage aggiornata con step: record -> upload -> transcribe -> review",
+				"Dopo upload: auto-start transcription",
+				"Mostra TranscriptionDisplay con loading state",
+				"Completata: mostra testo con opzioni 'Modifica', 'Continua'",
+				"Modifica: textarea editabile",
+				"Errore: mostra messaggio con 'Riprova'",
+				"Test E2E: flow completo con mock transcription"
+			],
+			"priority": 5,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-049",
+			"title": "Backend: Service OpenAI GPT Mock",
+			"description": "Come sviluppatore, ho bisogno di un servizio mock per l'estrazione AI.",
+			"acceptanceCriteria": [
+				"Service src/services/extraction/index.ts con interfaccia ExtractionService",
+				"Interfaccia: extract(transcript): Promise<ExtractedDecision>",
+				"ExtractedDecision: { title, category, emotionalState, options: [{ title, pros: [], cons: [] }] }",
+				"MockExtractionService ritorna dati predefiniti strutturati",
+				"Simula delay 1-2 secondi",
+				"Factory getExtractionService()",
+				"Test unitario"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-050",
+			"title": "Backend: Service OpenAI GPT Reale",
+			"description": "Come sviluppatore, ho bisogno dell'integrazione reale con OpenAI.",
+			"acceptanceCriteria": [
+				"Consultare context7: OpenAI Chat Completions API",
+				"Implementazione OpenAIExtractionService",
+				"Prompt engineering per estrazione strutturata",
+				"System prompt che definisce output JSON schema",
+				"Usa GPT-4 (configurabile)",
+				"Valida response con Zod",
+				"Gestisce errori API con retry",
+				"Test con mock OpenAI client"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-051",
+			"title": "Backend: Endpoint Extract Decision",
+			"description": "Come sistema, devo poter estrarre struttura da una trascrizione.",
+			"acceptanceCriteria": [
+				"POST /api/decisions/extract endpoint (protetto)",
+				"Body: { transcript: string }",
+				"Chiama ExtractionService.extract()",
+				"Ritorna ExtractedDecision",
+				"Gestisce errore extraction: 502",
+				"Rate limiting: max 10 richieste/minuto per utente",
+				"Test con mock service"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-052",
+			"title": "Frontend: Hook useExtraction",
+			"description": "Come sviluppatore, ho bisogno di un hook per l'estrazione AI.",
+			"acceptanceCriteria": [
+				"Hook useExtraction in src/hooks/useExtraction.ts",
+				"Funzione: extract(transcript): Promise<ExtractedDecision>",
+				"Stati: idle, extracting, success, error",
+				"Espone: extractedData, isExtracting, error, extract",
+				"Test unitario con mock API"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-053",
+			"title": "Frontend: Componente DecisionCard Display",
+			"description": "Come utente, voglio vedere i dati estratti in una card strutturata.",
+			"acceptanceCriteria": [
+				"Componente DecisionCard in src/components/decision/",
+				"Props: decision (ExtractedDecision), onEdit, mode ('view' | 'edit')",
+				"View mode: mostra titolo, categoria (badge), stato emotivo, opzioni con pro/contro",
+				"Opzioni: accordion o lista espandibile",
+				"Pro/contro: icone check/x, colori verde/rosso",
+				"Badge categoria con colori diversi",
+				"Stile: card con shadow, ben organizzata",
+				"Test unitario per rendering"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-054",
+			"title": "Frontend: Componente DecisionCard Editable",
+			"description": "Come utente, voglio poter modificare i dati estratti.",
+			"acceptanceCriteria": [
+				"DecisionCard con mode='edit'",
+				"Titolo: input text editabile",
+				"Categoria: select dropdown",
+				"Stato emotivo: input text o select predefiniti",
+				"Opzioni: possibilità di aggiungere/rimuovere",
+				"Pro/contro: possibilità di aggiungere/rimuovere/editare",
+				"Bottoni: 'Salva modifiche', 'Annulla'",
+				"Validazione: titolo obbligatorio, almeno 1 opzione",
+				"Test unitario per editing"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-055",
+			"title": "Frontend: Step Extraction in Flow Recording",
+			"description": "Come utente, dopo la trascrizione voglio vedere i dati estratti.",
+			"acceptanceCriteria": [
+				"RecordDecisionPage aggiunge step: ... -> transcribe -> extract -> review",
+				"Dopo transcription: auto-start extraction",
+				"Mostra skeleton DecisionCard durante loading",
+				"Completata: mostra DecisionCard in view mode",
+				"Bottoni: 'Modifica' (switch a edit mode), 'Salva decisione'",
+				"Test E2E: flow completo"
+			],
+			"priority": 6,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-056",
+			"title": "Backend: Endpoint Create Decision",
+			"description": "Come sistema, devo poter salvare una nuova decisione nel database.",
+			"acceptanceCriteria": [
+				"POST /api/decisions endpoint (protetto)",
+				"Body: CreateDecisionRequest con tutti i campi estratti",
+				"Crea record in DecisionsDecisions",
+				"Crea record in DecisionsDecisionOptions per ogni opzione",
+				"Crea record in DecisionsOptionProsCons per ogni pro/contro",
+				"Transaction: tutto o niente",
+				"Ritorna DecisionResponse con ID e dati completi",
+				"Verificare con Supabase MCP: records creati",
+				"Test integrazione"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-057",
+			"title": "Backend: Endpoint Get Decision",
+			"description": "Come sistema, devo poter recuperare una decisione completa.",
+			"acceptanceCriteria": [
+				"GET /api/decisions/:id endpoint (protetto)",
+				"Valida che decisione appartenga all'utente (RLS)",
+				"Join con options e pros/cons",
+				"Include outcome se presente",
+				"Ritorna DecisionResponse completa",
+				"404 se non trovata",
+				"Test integrazione"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-058",
+			"title": "Backend: Endpoint Update Decision",
+			"description": "Come sistema, devo poter aggiornare una decisione.",
+			"acceptanceCriteria": [
+				"PATCH /api/decisions/:id endpoint (protetto)",
+				"Body: UpdateDecisionRequest (partial)",
+				"Aggiorna solo i campi forniti",
+				"Gestisce update opzioni: add/update/remove",
+				"Transaction per consistenza",
+				"Ritorna DecisionResponse aggiornata",
+				"Test integrazione"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-059",
+			"title": "Backend: Endpoint List Decisions",
+			"description": "Come sistema, devo poter elencare le decisioni di un utente.",
+			"acceptanceCriteria": [
+				"GET /api/decisions endpoint (protetto)",
+				"Query params: status, category, page, limit, sortBy, sortOrder",
+				"Ritorna: { items: Decision[], total: number, page: number, totalPages: number }",
+				"Default: limit=20, sortBy=createdAt, sortOrder=desc",
+				"Include count opzioni ma non dettagli (performance)",
+				"Test con pagination"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-060",
+			"title": "Backend: Endpoint Delete Decision",
+			"description": "Come sistema, devo poter eliminare una decisione.",
+			"acceptanceCriteria": [
+				"DELETE /api/decisions/:id endpoint (protetto)",
+				"Soft delete: imposta deleted_at (aggiungere campo se mancante)",
+				"Cascade: non elimina fisicamente opzioni/pros/cons",
+				"Ritorna 204 No Content",
+				"Test integrazione"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-061",
+			"title": "Backend: Endpoint Mark Decision as Decided",
+			"description": "Come sistema, devo poter segnare una decisione come presa.",
+			"acceptanceCriteria": [
+				"POST /api/decisions/:id/decide endpoint (protetto)",
+				"Body: { chosenOptionId: string }",
+				"Aggiorna status a 'decided', decided_at a now()",
+				"Imposta is_chosen=true sull'opzione scelta",
+				"Valida che optionId appartenga alla decisione",
+				"Ritorna DecisionResponse aggiornata",
+				"Test integrazione"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-062",
+			"title": "Frontend: Service API Decisions",
+			"description": "Come sviluppatore, ho bisogno di un service per le API decisions.",
+			"acceptanceCriteria": [
+				"Service src/services/decisions.ts",
+				"Funzioni: createDecision, getDecision, updateDecision, listDecisions, deleteDecision, markAsDecided",
+				"Usa fetch con auth header da session",
+				"Tipi request/response da @decisions/types",
+				"Error handling con tipi custom",
+				"Test unitario con mock fetch"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-063",
+			"title": "Frontend: Hook useDecisions (React Query)",
+			"description": "Come sviluppatore, ho bisogno di hooks per gestire le decisions.",
+			"acceptanceCriteria": [
+				"Consultare context7: TanStack Query (React Query)",
+				"Installare @tanstack/react-query",
+				"QueryClientProvider in App",
+				"Hook useDecisions() per lista con pagination",
+				"Hook useDecision(id) per singola decisione",
+				"Hook useCreateDecision() mutation",
+				"Hook useUpdateDecision() mutation",
+				"Hook useDeleteDecision() mutation",
+				"Invalidation corretta dopo mutations",
+				"Test unitario per hooks"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-064",
+			"title": "Frontend: Completare Flow Salvataggio Decisione",
+			"description": "Come utente, voglio salvare la decisione e tornare alla dashboard.",
+			"acceptanceCriteria": [
+				"RecordDecisionPage: bottone 'Salva decisione' chiama useCreateDecision",
+				"Loading state durante salvataggio",
+				"Successo: redirect a /dashboard con toast 'Decisione salvata!'",
+				"Errore: mostra messaggio, permette retry",
+				"Test E2E: flow completo da record a salvataggio"
+			],
+			"priority": 7,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-065",
+			"title": "Backend: Endpoint Create Outcome",
+			"description": "Come sistema, devo poter salvare l'outcome di una decisione.",
+			"acceptanceCriteria": [
+				"POST /api/decisions/:id/outcome endpoint (protetto)",
+				"Body: { rating: OutcomeRating, notes?: string, audioUrl?: string, transcript?: string }",
+				"Valida che decisione sia in status 'decided'",
+				"Crea record in DecisionsDecisionOutcomes",
+				"Aggiorna decision status a 'outcome_recorded'",
+				"Ritorna DecisionOutcome",
+				"409 se outcome già esiste",
+				"Test integrazione"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-066",
+			"title": "Backend: Endpoint Get Outcome",
+			"description": "Come sistema, devo poter recuperare l'outcome di una decisione.",
+			"acceptanceCriteria": [
+				"GET /api/decisions/:id/outcome endpoint (protetto)",
+				"Ritorna DecisionOutcome se esiste",
+				"404 se non esiste",
+				"Test integrazione"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-067",
+			"title": "Backend: Endpoint Update Outcome",
+			"description": "Come sistema, devo poter aggiornare l'outcome di una decisione.",
+			"acceptanceCriteria": [
+				"PATCH /api/decisions/:id/outcome endpoint (protetto)",
+				"Body: partial OutcomeUpdate",
+				"Ritorna DecisionOutcome aggiornato",
+				"Test integrazione"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-068",
+			"title": "Backend: Endpoint Create Follow-up Reminder",
+			"description": "Come sistema, devo poter schedulare un reminder per follow-up.",
+			"acceptanceCriteria": [
+				"POST /api/decisions/:id/reminder endpoint (protetto)",
+				"Body: { scheduledFor: ISO date string }",
+				"Valida: scheduledFor nel futuro, decisione in status 'decided'",
+				"Crea record in DecisionsFollowUpReminders",
+				"Ritorna FollowUpReminder",
+				"Test integrazione"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-069",
+			"title": "Frontend: Service API Outcomes",
+			"description": "Come sviluppatore, ho bisogno di un service per le API outcomes.",
+			"acceptanceCriteria": [
+				"Funzioni in src/services/outcomes.ts: createOutcome, getOutcome, updateOutcome",
+				"Funzioni in src/services/reminders.ts: createReminder, listReminders",
+				"Tipi da @decisions/types",
+				"Test unitario"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-070",
+			"title": "Frontend: Componente OutcomeRecorder",
+			"description": "Come utente, voglio poter registrare l'outcome di una decisione.",
+			"acceptanceCriteria": [
+				"Componente OutcomeRecorder in src/components/outcome/",
+				"Props: decisionId, onComplete",
+				"UI: 3 bottoni grandi per rating (better/as/worse expected)",
+				"Icone e colori: verde smile, giallo neutral, rosso frown",
+				"Opzionale: textarea per note",
+				"Opzionale: mini voice recorder per note vocali",
+				"Submit chiama createOutcome",
+				"Test unitario"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-071",
+			"title": "Frontend: Componente ReminderPicker",
+			"description": "Come utente, voglio poter impostare un reminder per il follow-up.",
+			"acceptanceCriteria": [
+				"Componente ReminderPicker in src/components/reminder/",
+				"Props: decisionId, onSet",
+				"UI: preset buttons (1 settimana, 2 settimane, 1 mese, 3 mesi)",
+				"Custom date picker per data specifica",
+				"Mostra data selezionata in formato leggibile",
+				"Submit chiama createReminder",
+				"Test unitario"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-072",
+			"title": "Frontend: Pagina Decision Detail",
+			"description": "Come utente, voglio vedere i dettagli di una decisione.",
+			"acceptanceCriteria": [
+				"Route /decisions/:id con DecisionDetailPage",
+				"Carica decisione con useDecision(id)",
+				"Mostra DecisionCard completa",
+				"Se status 'decided' e no outcome: mostra OutcomeRecorder",
+				"Se status 'decided' e no reminder: mostra ReminderPicker",
+				"Se outcome presente: mostra riepilogo outcome",
+				"Bottone 'Modifica' per editare",
+				"Bottone 'Elimina' con conferma",
+				"Test E2E"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-073",
+			"title": "Frontend: Flow Decide e Set Reminder",
+			"description": "Come utente, dopo aver deciso voglio impostare un follow-up.",
+			"acceptanceCriteria": [
+				"In DecisionDetailPage: se status 'in_progress', mostra bottoni opzioni per scegliere",
+				"Click su opzione: conferma dialog 'Hai scelto [opzione]. Confermi?'",
+				"Conferma chiama markAsDecided",
+				"Dopo conferma: mostra ReminderPicker",
+				"Impostato reminder: toast successo, refresh page",
+				"Test E2E: flow decide -> set reminder"
+			],
+			"priority": 8,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-074",
+			"title": "Frontend: Componente DecisionListItem",
+			"description": "Come sviluppatore, ho bisogno di un componente per ogni item della lista.",
+			"acceptanceCriteria": [
+				"Componente DecisionListItem in src/components/decision/",
+				"Props: decision (summary), onClick",
+				"Mostra: titolo, categoria badge, status badge, data creazione",
+				"Status badges: draft (grigio), in_progress (blu), decided (verde), outcome_recorded (purple)",
+				"Hover effect, clickable",
+				"Mobile: layout compatto",
+				"Test unitario"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-075",
+			"title": "Frontend: Componente DecisionList",
+			"description": "Come utente, voglio vedere la lista delle mie decisioni.",
+			"acceptanceCriteria": [
+				"Componente DecisionList in src/components/decision/",
+				"Props: decisions[], isLoading, onItemClick",
+				"Loading: skeleton list (5-10 items)",
+				"Empty state: illustrazione + messaggio 'Nessuna decisione ancora'",
+				"List: renderizza DecisionListItem per ogni decisione",
+				"Infinite scroll o pagination buttons",
+				"Test unitario"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-076",
+			"title": "Frontend: Componente FilterBar",
+			"description": "Come utente, voglio poter filtrare le mie decisioni.",
+			"acceptanceCriteria": [
+				"Componente FilterBar in src/components/common/",
+				"Props: filters, onChange",
+				"Filtri: status (multi-select), categoria (multi-select)",
+				"Sort: più recenti, più vecchi, alfabetico",
+				"Search: input text per ricerca titolo",
+				"Mobile: filtri in bottom sheet o modal",
+				"Clear all filters button",
+				"Test unitario"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-077",
+			"title": "Frontend: Dashboard Page Base",
+			"description": "Come utente, voglio una dashboard come home page dopo login.",
+			"acceptanceCriteria": [
+				"Route /dashboard con DashboardPage",
+				"Protetta da ProtectedRoute",
+				"Layout: header con saluto 'Ciao [nome]!', FilterBar, DecisionList",
+				"FAB (floating action button) '+' per nuova decisione -> /record",
+				"Usa useDecisions hook per dati",
+				"Click su item -> /decisions/:id",
+				"Test E2E: navigazione e rendering"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-078",
+			"title": "Backend: Endpoint Stats Base",
+			"description": "Come sistema, devo fornire statistiche base delle decisioni.",
+			"acceptanceCriteria": [
+				"GET /api/stats/overview endpoint (protetto)",
+				"Ritorna: totalDecisions, decisionsByStatus (count per status), decisionsByCategory (count per category), outcomeBreakdown (count per rating)",
+				"Query ottimizzata con GROUP BY",
+				"Cache 5 minuti (opzionale)",
+				"Test integrazione"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-079",
+			"title": "Frontend: Componente StatsCard",
+			"description": "Come utente, voglio vedere statistiche chiave in cards.",
+			"acceptanceCriteria": [
+				"Componente StatsCard in src/components/stats/",
+				"Props: title, value, subtitle, icon, trend (optional)",
+				"UI: card compatta, numero grande, titolo piccolo",
+				"Trend: freccia up/down verde/rosso se presente",
+				"Test unitario"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-080",
+			"title": "Frontend: Stats Overview nella Dashboard",
+			"description": "Come utente, voglio vedere statistiche base nella dashboard.",
+			"acceptanceCriteria": [
+				"Hook useStats() che chiama /api/stats/overview",
+				"DashboardPage mostra row di StatsCards sopra la lista",
+				"Cards: Totale decisioni, Decisioni in attesa, Outcome positivi (%)",
+				"Loading state: skeleton cards",
+				"Test E2E"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-081",
+			"title": "Frontend: Componente DecisionTimeline",
+			"description": "Come utente, voglio vedere le decisioni in una timeline.",
+			"acceptanceCriteria": [
+				"Consultare context7: Recharts o Victory timeline charts",
+				"Componente DecisionTimeline in src/components/stats/",
+				"Props: decisions[] (con createdAt)",
+				"Visualizzazione: scatter plot o timeline con decisioni per data",
+				"Colori: per outcome (verde/giallo/rosso) o status",
+				"Interattivo: hover mostra dettagli, click naviga",
+				"Responsive",
+				"Test unitario per rendering"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-082",
+			"title": "Frontend: Tab Timeline nella Dashboard",
+			"description": "Come utente, voglio poter vedere la timeline nella dashboard.",
+			"acceptanceCriteria": [
+				"DashboardPage: tabs 'Lista' e 'Timeline'",
+				"Tab Lista: mostra DecisionList (esistente)",
+				"Tab Timeline: mostra DecisionTimeline",
+				"Persiste tab selezionato in URL query param",
+				"Condivide filtri tra le views",
+				"Test E2E"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-083",
+			"title": "E2E Test: Flow Completo MVP",
+			"description": "Come QA, ho bisogno di testare l'intero flow MVP.",
+			"acceptanceCriteria": [
+				"Test Playwright: apps/e2e/tests/full-flow.spec.ts",
+				"Test 1: Registrazione nuovo utente",
+				"Test 2: Login utente esistente",
+				"Test 3: Recording nuova decisione (mock audio)",
+				"Test 4: Visualizzazione trascrizione (mock)",
+				"Test 5: Review dati estratti (mock)",
+				"Test 6: Salvataggio decisione",
+				"Test 7: Visualizzazione in dashboard",
+				"Test 8: Apertura dettaglio decisione",
+				"Test 9: Marking as decided",
+				"Test 10: Recording outcome",
+				"Test 11: Logout",
+				"Tutti i test passano in CI"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		},
+		{
+			"id": "US-084",
+			"title": "Documentation: README Principale",
+			"description": "Come sviluppatore, ho bisogno di documentazione completa.",
+			"acceptanceCriteria": [
+				"README.md in root con: descrizione progetto, tech stack, setup locale",
+				"Sezione: prerequisiti (Node 20, pnpm, Supabase account)",
+				"Sezione: installazione step-by-step",
+				"Sezione: environment variables",
+				"Sezione: running dev servers",
+				"Sezione: running tests",
+				"Sezione: project structure",
+				"ARCHITECTURE.md con diagrammi (mermaid)",
+				"CONTRIBUTING.md con guidelines"
+			],
+			"priority": 9,
+			"passes": false,
+			"notes": ""
+		}
+	]
+}

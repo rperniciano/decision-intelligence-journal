@@ -1,0 +1,9 @@
+# Ralph Progress Log
+Project: Decision Intelligence Journal MVP
+Started: 2026-01-15
+
+## Codebase Patterns
+(This section will be populated as patterns are discovered during implementation)
+
+---
+

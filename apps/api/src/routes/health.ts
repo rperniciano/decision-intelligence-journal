@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import type { DecisionStatus } from '@decisions/shared';
 
 /**
  * Health check response type
@@ -9,12 +8,6 @@ interface HealthResponse {
   timestamp: string;
   uptime: number;
 }
-
-/**
- * Type verification - ensure shared types are importable
- * This demonstrates that @decisions/shared is properly linked
- */
-type _VerifySharedTypes = DecisionStatus;
 
 /**
  * Health check routes plugin

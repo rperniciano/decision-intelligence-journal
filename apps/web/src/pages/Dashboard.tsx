@@ -121,7 +121,7 @@ export default function Dashboard() {
             Coming soon
           </p>
           <p className="mt-4 max-w-md text-sm text-gray-500">
-            We're working hard to bring you powerful decision intelligence tools.
+            We&apos;re working hard to bring you powerful decision intelligence tools.
             Check back soon for journal entries, decision tracking, and insights.
           </p>
         </div>
