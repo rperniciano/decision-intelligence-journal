@@ -37,3 +37,6 @@ export * from './decision-option';
 
 // Re-export types from option-pro-con module
 export * from './option-pro-con';
+
+// Re-export types from decision-outcome module
+export * from './decision-outcome';
