@@ -23,6 +23,9 @@ importers:
       '@decisions/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@decisions/supabase':
+        specifier: workspace:*
+        version: link:../../packages/supabase
       '@decisions/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -35,9 +38,6 @@ importers:
       '@fastify/multipart':
         specifier: ^8.0.0
         version: 8.3.1
-      '@supabase/supabase-js':
-        specifier: ^2.45.0
-        version: 2.90.1
       assemblyai:
         specifier: ^4.7.0
         version: 4.22.1
@@ -84,12 +84,12 @@ importers:
       '@decisions/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@decisions/supabase':
+        specifier: workspace:*
+        version: link:../../packages/supabase
       '@decisions/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@supabase/supabase-js':
-        specifier: ^2.47.0
-        version: 2.90.1
       react:
         specifier: ^18.3.0
         version: 18.3.1
@@ -156,6 +156,25 @@ importers:
         version: 4.0.17(jsdom@27.4.0)
 
   packages/shared:
+    devDependencies:
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^7.0.0
+        version: 7.18.0(@typescript-eslint/parser@7.18.0)(eslint@8.57.1)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^7.0.0
+        version: 7.18.0(eslint@8.57.1)(typescript@5.9.3)
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.1
+      typescript:
+        specifier: ^5.4.0
+        version: 5.9.3
+
+  packages/supabase:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.47.0
+        version: 2.90.1
     devDependencies:
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.0.0

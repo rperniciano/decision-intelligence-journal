@@ -3,25 +3,21 @@
  * These types map directly to the database schema
  */
 
-// Enum types - using union types for better TypeScript inference
-export type DecisionStatus = 'draft' | 'in_progress' | 'decided' | 'outcome_recorded';
-export type OutcomeRating = 'better_than_expected' | 'as_expected' | 'worse_than_expected';
-export type DecisionCategory =
-  | 'career'
-  | 'financial'
-  | 'relationship'
-  | 'health'
-  | 'lifestyle'
-  | 'other';
-export type EmotionalState =
-  | 'confident'
-  | 'anxious'
-  | 'uncertain'
-  | 'excited'
-  | 'stressed'
-  | 'calm'
-  | 'hopeful'
-  | 'conflicted';
+// Re-export enum types from enums module
+export type {
+  DecisionStatus,
+  OutcomeRating,
+  DecisionCategory,
+  EmotionalState,
+} from './enums';
+
+// Import for use in this file
+import type {
+  DecisionStatus,
+  OutcomeRating,
+  DecisionCategory,
+  EmotionalState,
+} from './enums';
 
 /**
  * Decision entity

@@ -23,5 +23,8 @@ export interface UserProfile extends User {
   updatedAt: string;
 }
 
+// Re-export types from enums module
+export * from './enums';
+
 // Re-export types from database module for convenience
 export * from './database';
