@@ -20,6 +20,7 @@ You are an autonomous coding agent (Claude Code) working on a software project.
 ## Project Structure (Turborepo Monorepo)
 
 This is a Turborepo monorepo with pnpm workspaces:
+
 - `apps/web` - React + Vite + TypeScript frontend
 - `apps/api` - Fastify + TypeScript backend
 - `apps/e2e` - Playwright E2E tests
@@ -29,6 +30,7 @@ This is a Turborepo monorepo with pnpm workspaces:
 ## Progress Report Format
 
 APPEND to ralph/progress.txt (never replace, always append):
+
 ```
 ## [Date/Time] - [Story ID]
 Iteration: [iteration number]
@@ -72,12 +74,14 @@ Before committing, check if any edited files have learnings worth preserving in 
    - Configuration or environment requirements
 
 **Examples of good AGENTS.md additions:**
+
 - "When modifying X, also update Y to keep them in sync"
 - "This module uses pattern Z for all API calls"
 - "Tests require the dev server running on PORT 3000"
 - "Field names must match the template exactly"
 
 **Do NOT add:**
+
 - Story-specific implementation details
 - Temporary debugging notes
 - Information already in progress.txt
@@ -111,6 +115,7 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 5. **Document findings**: Note useful patterns in your progress report
 
 Example context7 queries:
+
 - "React useContext for authentication"
 - "Fastify TypeScript route handlers"
 - "Supabase RLS policies for user data"
@@ -121,22 +126,27 @@ Example context7 queries:
 **AFTER implementing**, verify acceptance criteria:
 
 ### Unit Testing (Vitest)
+
 - Test React components with @testing-library/react
 - Test utility functions and hooks
 - Mock external dependencies (Supabase, APIs)
 
 ### API Testing
+
 For every API endpoint created:
+
 - Verify endpoint returns correct status code (200, 201, 404, etc.)
 - Verify response body structure matches types
 - Test authorization (401 for unauthenticated, 403 for unauthorized)
 
 ### E2E Testing (Playwright)
+
 - Navigate to pages and verify rendering
 - Test user interactions (clicks, form submissions)
 - Verify data flows correctly between frontend and API
 
 ### Running Tests
+
 ```bash
 # Unit tests
 pnpm test
@@ -171,7 +181,7 @@ pnpm --filter @decisions/e2e test
    - Assembly.AI SDK for transcription
    - OpenAI SDK for extraction
 
-3. **Shared (packages/*):**
+3. **Shared (packages/\*):**
    - TypeScript types in packages/types
    - Supabase client factory in packages/supabase
 

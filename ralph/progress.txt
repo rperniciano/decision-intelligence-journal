@@ -6,9 +6,30 @@ Started: 01/15/2026 18:58:33
 - Turborepo pipeline: build depends on ^build, lint and test run in parallel
 - ESLint uses .eslintrc.cjs (CommonJS) due to root package.json "type": "module"
 - tsconfig.node.json requires composite: true for project references
+- tsconfig.base.json has noEmit: true; packages must override with noEmit: false
 - pnpm workspaces: apps/* and packages/*
-- Shared types in packages/shared (named @decisions/shared)
+- Shared types in packages/shared (@decisions/shared), packages/types (@decisions/types), packages/supabase (@decisions/supabase)
 - Root scripts: dev, build, lint, test, format
+- API uses moduleResolution: "bundler" (no .js extensions in imports)
+- External clients (Supabase, AssemblyAI) are lazily initialized for flexibility
+- Supabase client factory in @decisions/supabase: createBrowserClient (web), createAdminClient (api)
+- Vitest for unit testing: web uses jsdom environment, api uses node environment
+- Test files in __tests__ directories, use *.test.ts(x) pattern
+- Fastify routes can be tested with app.inject() without HTTP
+- Playwright E2E tests in apps/e2e, run with `pnpm test:e2e`
+- Playwright webServer auto-starts frontend (5173) and backend (3001) for tests
+- @fastify/env with dotenv: true for env validation; config accessed via server.config
+- Environment files: apps/web/.env.local (VITE_*), apps/api/.env (server-side)
+- Supabase project: doqojfsldvajmlscpwhu (Decision Intelligence Journal)
+- Supabase migrations: supabase/migrations/*.sql, applied via MCP apply_migration
+- RLS policies: use (SELECT auth.uid()) = id (wrapped select for performance)
+- Trigger function update_updated_at_column() is reusable for all tables
+- Case-sensitive table names require double quotes: "DecisionsUserProfiles"
+- Supabase Storage: bucket "decision-audio" for audio files, private with RLS
+- Storage RLS: use storage.foldername(name)[1] = auth.uid()::text for user folder checks
+- @fastify/jwt v8.x for Fastify 4.x (v9.x+ requires Fastify 5.x)
+- Auth plugin: authenticate decorator for protected routes, jwtUser property on request
+- Supabase JWT: sub = user ID, email, phone, role, aal, session_id, app_metadata, user_metadata
 
 ---
 
@@ -40,3 +61,600 @@ Iteration: 1
   - noUnusedLocals in tsconfig catches unused type aliases - remove them rather than adding eslint-disable
   - Build errors for unused variables are TypeScript errors (TS6133, TS6196), not ESLint errors
 ---
+
+## 01/15/2026 - US-002
+Iteration: 2
+- What was implemented:
+  - Fixed package.json name from "web" to "@decisions/web" for workspace consistency
+  - Updated vite.config.ts port from 5172 to 5173 (standard Vite port)
+  - Added proxy configuration for /api requests to localhost:3001
+- Files changed:
+  - apps/web/package.json
+  - apps/web/vite.config.ts
+- **Learnings for future iterations:**
+  - Frontend app already existed with most setup done, just needed workspace name fix
+  - Vite proxy configuration in server.proxy handles API forwarding
+  - Use `pnpm --filter @decisions/web dev` to run just the frontend
+---
+
+## 01/15/2026 - US-003
+Iteration: 3
+- What was implemented:
+  - Fixed package.json name from "api" to "@decisions/api" for workspace consistency
+  - Added @fastify/env dependency for environment variable handling
+  - Changed tsconfig.json to use moduleResolution: "bundler" and module: "ESNext"
+  - Updated all imports to remove .js extensions (bundler resolution doesn't need them)
+  - Made Supabase and AssemblyAI clients lazily initialized to allow server startup without env vars
+- Files changed:
+  - apps/api/package.json
+  - apps/api/tsconfig.json
+  - apps/api/src/index.ts
+  - apps/api/src/routes/index.ts
+  - apps/api/src/routes/decisions.ts
+  - apps/api/src/lib/supabase.ts
+  - apps/api/src/lib/assemblyai.ts
+- **Learnings for future iterations:**
+  - Backend app already existed with most setup done, needed workspace name and moduleResolution fixes
+  - Use lazy initialization for external service clients to allow basic routes to work without env vars
+  - moduleResolution: "bundler" means imports don't need .js extensions
+  - Use `pnpm --filter @decisions/api dev` to run just the backend
+  - Health endpoint is at /health and returns { status: 'ok', timestamp, uptime }
+---
+
+## 01/15/2026 - US-004
+Iteration: 4
+- What was implemented:
+  - Verified: Tailwind CSS was already fully configured
+  - Dependencies present: tailwindcss, postcss, autoprefixer
+  - tailwind.config.js correctly configured with content paths
+  - postcss.config.js properly set up
+  - index.css has all @tailwind directives
+  - Components (Login, Dashboard) extensively use Tailwind classes
+- Files changed:
+  - None (already complete)
+- **Learnings for future iterations:**
+  - Tailwind CSS was already configured in the codebase
+  - CSS output is ~18KB showing Tailwind processing is working
+  - Components use standard Tailwind classes (bg-*, text-*, p-*, rounded, etc.)
+---
+
+## 01/15/2026 - US-005
+Iteration: 5
+- What was implemented:
+  - Created packages/types directory with @decisions/types package
+  - Added package.json with proper main/types exports pointing to dist
+  - Added tsconfig.json with declaration: true for .d.ts generation
+  - Created User and UserProfile interfaces
+  - Created database types: Decision, DecisionOption, OptionProCon, DecisionOutcome, FollowUpReminder
+  - Created enum types: DecisionStatus, OutcomeRating, DecisionCategory, EmotionalState
+  - Added @decisions/types as dependency to @decisions/web and @decisions/api
+- Files changed:
+  - packages/types/package.json (new)
+  - packages/types/tsconfig.json (new)
+  - packages/types/src/index.ts (new)
+  - packages/types/src/database.ts (new)
+  - apps/web/package.json
+  - apps/api/package.json
+- **Learnings for future iterations:**
+  - Codebase already had @decisions/shared, so @decisions/types is an additional types package
+  - Use declaration: true in tsconfig to generate .d.ts files
+  - Package exports should point to dist/ for compiled output
+  - Turborepo correctly handles new packages automatically
+---
+
+## 01/15/2026 - US-006
+Iteration: 6
+- What was implemented:
+  - Created .prettierignore file with dist, node_modules, .turbo, coverage, build, .next, pnpm-lock.yaml
+  - Created .gitattributes file for consistent LF line endings across all platforms
+  - Verified existing .eslintrc.cjs with flat config for TypeScript and React
+  - Verified existing .prettierrc with singleQuote: true, semi: true, tabWidth: 2
+  - Verified turbo pipeline already includes 'lint' task
+  - Verified all packages have lint scripts configured
+  - Ran pnpm format to normalize all file formatting
+  - All lint and format commands pass successfully
+- Files changed:
+  - .prettierignore (new)
+  - .gitattributes (new)
+  - Various source files (formatting normalization by Prettier)
+- **Learnings for future iterations:**
+  - ESLint and Prettier were mostly pre-configured, just needed .prettierignore
+  - Use .gitattributes with text=auto eol=lf to ensure consistent line endings
+  - pnpm format runs prettier on all matching files (ts, tsx, js, jsx, json, md)
+  - React version detection warnings in non-React packages are harmless
+---
+
+## 01/15/2026 - US-007
+Iteration: 7
+- What was implemented:
+  - Installed vitest v4.0.17 at root workspace and in both apps
+  - Created apps/web/vitest.config.ts with jsdom environment and globals: true
+  - Created apps/api/vitest.config.ts with node environment
+  - Installed @testing-library/react, @testing-library/jest-dom, @testing-library/dom, jsdom in web app
+  - Created apps/web/src/__tests__/setup.ts with jest-dom matchers
+  - Created apps/web/src/__tests__/App.test.tsx with 2 placeholder tests
+  - Created apps/api/src/__tests__/health.test.ts with 3 tests for health endpoint
+  - Added "test" and "test:watch" scripts to both app package.json files
+  - turbo.json already had test task in pipeline
+  - All tests pass with `pnpm test` from root
+- Files changed:
+  - package.json (added vitest as root dev dependency)
+  - pnpm-lock.yaml
+  - apps/web/package.json (added test scripts and testing dependencies)
+  - apps/web/vitest.config.ts (new)
+  - apps/web/src/__tests__/setup.ts (new)
+  - apps/web/src/__tests__/App.test.tsx (new)
+  - apps/api/package.json (added test scripts and vitest)
+  - apps/api/vitest.config.ts (new)
+  - apps/api/src/__tests__/health.test.ts (new)
+- **Learnings for future iterations:**
+  - Vitest 4.x is latest stable version with good TypeScript support
+  - Use jsdom environment for React component tests, node for API tests
+  - @testing-library/jest-dom provides toBeInTheDocument() and similar matchers
+  - Fastify's app.inject() method is useful for testing routes without HTTP
+  - setupFiles in vitest.config.ts can point to a file that imports jest-dom matchers
+  - React Router warnings about future flags are normal and don't affect test results
+---
+
+## 01/15/2026 - US-008
+Iteration: 8
+- What was implemented:
+  - Created apps/e2e directory for Playwright E2E testing
+  - Added package.json with @playwright/test v1.50.0
+  - Created playwright.config.ts with:
+    - baseURL: http://localhost:5173
+    - webServer configuration to auto-start frontend and backend
+    - HTML reporter in playwright-report/
+    - Chromium as primary test browser (Firefox/WebKit commented but available)
+  - Created tsconfig.json for TypeScript support in e2e tests
+  - Created tests/example.spec.ts with 3 tests:
+    - Redirect to login when not authenticated
+    - Verify login page elements render correctly
+    - Navigation from login to signup
+  - Added test:e2e script to root package.json
+  - Added placeholder lint script to e2e package for Turborepo compatibility
+  - Installed Playwright Chromium browser
+- Files changed:
+  - apps/e2e/package.json (new)
+  - apps/e2e/playwright.config.ts (new)
+  - apps/e2e/tsconfig.json (new)
+  - apps/e2e/tests/example.spec.ts (new)
+  - package.json (added test:e2e script)
+  - pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - Playwright 1.50.0 is the latest stable version
+  - Use `pnpm --filter @decisions/e2e exec playwright install chromium` to install browser
+  - webServer array in config can start multiple servers (api + web)
+  - Use reuseExistingServer: !process.env.CI for dev/CI flexibility
+  - E2E tests use getByRole, getByLabel for accessible queries
+  - E2E package doesn't need build task but needs lint for Turborepo (can be echo placeholder)
+---
+
+## 01/15/2026 - US-009
+Iteration: 9
+- What was implemented:
+  - Created apps/api/.env.example with all backend environment variables:
+    - Server config: PORT, HOST, NODE_ENV, LOG_LEVEL, CORS_ORIGIN
+    - Supabase config: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+    - AI services: ASSEMBLYAI_API_KEY, OPENAI_API_KEY
+  - Created apps/api/src/config/env.ts with:
+    - Zod schema for environment validation
+    - TypeScript type export (Env)
+    - JSON Schema for @fastify/env (fastifyEnvSchema)
+    - validateEnv() helper function
+    - isSupabaseConfigured() and isAIConfigured() helpers
+  - Updated apps/api/src/index.ts to:
+    - Register @fastify/env plugin with dotenv: true
+    - Use server.config for validated environment access
+    - Extended FastifyInstance type with config property
+  - Updated README.md with detailed environment variables documentation:
+    - Separate sections for frontend and backend env files
+    - Clear instructions on where to get API keys
+    - Security note about SERVICE_ROLE_KEY
+  - Verified .gitignore already includes .env and .env.local
+- Files changed:
+  - apps/api/.env.example (new)
+  - apps/api/src/config/env.ts (new)
+  - apps/api/src/index.ts (modified)
+  - apps/api/package.json (added zod)
+  - README.md (updated)
+  - pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - @fastify/env uses JSON Schema, not Zod directly, so both schemas needed
+  - ZodError uses .issues property (not .errors) for accessing validation errors
+  - @fastify/env with dotenv: true auto-loads .env files
+  - Use confKey option to specify where config is attached (server.config)
+  - Extend FastifyInstance with declare module 'fastify' for TypeScript
+---
+
+## 01/15/2026 - US-010
+Iteration: 10
+- What was implemented:
+  - Created packages/supabase directory with @decisions/supabase package
+  - Added package.json with @supabase/supabase-js dependency
+  - Created tsconfig.json with noEmit: false to enable compilation
+  - Created src/client.ts with factory functions:
+    - createClient: base configurable client
+    - createBrowserClient: browser-safe client with anon key
+    - createAdminClient: server-side client with service role key (bypasses RLS)
+  - Created src/types.ts re-exporting common Supabase types
+  - Created src/index.ts exporting all functions and types
+  - Updated apps/web/src/lib/supabase.ts to use createBrowserClient from @decisions/supabase
+  - Updated apps/api/src/lib/supabase.ts to use createAdminClient from @decisions/supabase
+  - Updated apps/web/src/contexts/AuthContext.tsx to import types from @decisions/supabase
+  - Added @decisions/supabase as workspace dependency in both apps
+  - Removed direct @supabase/supabase-js dependency from apps (now via shared package)
+  - Used Proxy pattern for lazy initialization in web supabase client
+- Files changed:
+  - packages/supabase/package.json (new)
+  - packages/supabase/tsconfig.json (new)
+  - packages/supabase/src/client.ts (new)
+  - packages/supabase/src/types.ts (new)
+  - packages/supabase/src/index.ts (new)
+  - apps/web/package.json (modified)
+  - apps/web/src/lib/supabase.ts (modified)
+  - apps/web/src/contexts/AuthContext.tsx (modified)
+  - apps/api/package.json (modified)
+  - apps/api/src/lib/supabase.ts (modified)
+  - pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - tsconfig.base.json has noEmit: true, packages must override with noEmit: false
+  - When exporting getter objects, TypeScript infers complex types; use Proxy with explicit type annotation
+  - Supabase types can be re-exported from shared package for consistency
+  - createAdminClient should disable autoRefreshToken and persistSession for server use
+  - Database already has tables: profiles, categories, decisions, options, pros_cons
+  - Project URL: https://doqojfsldvajmlscpwhu.supabase.co
+---
+
+## 01/15/2026 - US-011
+Iteration: 11
+- What was implemented:
+  - Created supabase/migrations directory structure
+  - Created 001_users_profile.sql migration file with:
+    - DecisionsUserProfiles table with id (uuid PK ref auth.users), display_name, avatar_url, onboarding_completed, created_at, updated_at
+    - update_updated_at_column() trigger function
+    - RLS enabled on table
+    - RLS policies for SELECT, INSERT, UPDATE (users access own profile only)
+    - Trigger on UPDATE for automatic updated_at timestamp
+  - Applied migration to Supabase via MCP (success)
+  - Verified table exists with SELECT query (empty result, no errors)
+  - Verified RLS policies: Users can view/create/update their own profile
+  - Verified trigger: update_decisions_user_profiles_updated_at on UPDATE
+  - Security advisors show no issues with new table (RLS properly configured)
+- Files changed:
+  - supabase/migrations/001_users_profile.sql (new)
+- **Learnings for future iterations:**
+  - Supabase migrations are stored in supabase/migrations/*.sql
+  - Use (SELECT auth.uid()) = id for RLS policies (wrapped select for performance)
+  - update_updated_at_column() is a reusable trigger function for all tables
+  - Case-sensitive table names in PostgreSQL require double quotes ("DecisionsUserProfiles")
+  - Existing `profiles` table coexists with new `DecisionsUserProfiles` table
+  - apply_migration MCP tool is the primary way to run DDL operations
+---
+
+## 01/15/2026 - US-012
+Iteration: 12
+- What was implemented:
+  - Created supabase/migrations/002_enums.sql with PostgreSQL ENUM types:
+    - decision_status: draft, in_progress, decided, outcome_recorded
+    - outcome_rating: better_than_expected, as_expected, worse_than_expected
+    - decision_category: career, financial, relationship, health, lifestyle, other
+  - Added missing values (draft, outcome_recorded) to pre-existing decision_status enum
+  - Created packages/types/src/enums.ts with:
+    - TypeScript union types for all enums
+    - Constant arrays for validation (DECISION_STATUS_VALUES, etc.)
+  - Refactored packages/types/src/database.ts to import enums from enums.ts
+  - Updated packages/types/src/index.ts to export from enums module
+  - Applied migration via Supabase MCP and verified with enum_range queries
+  - pnpm build and pnpm lint pass successfully
+- Files changed:
+  - supabase/migrations/002_enums.sql (new)
+  - packages/types/src/enums.ts (new)
+  - packages/types/src/database.ts (modified)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - PostgreSQL ENUMs may already exist from previous work; use IF NOT EXISTS pattern
+  - ALTER TYPE ... ADD VALUE IF NOT EXISTS can add values to existing enums
+  - Cannot remove enum values without dropping and recreating the type
+  - TypeScript union types are preferred over enums for better type inference
+  - Providing constant arrays (e.g., DECISION_STATUS_VALUES) is useful for runtime validation
+---
+
+## 01/15/2026 - US-013
+Iteration: 13
+- What was implemented:
+  - Created supabase/migrations/003_decisions.sql migration file with:
+    - DecisionsDecisions table with all required fields (id, user_id, title, description, status, category, emotional_state, audio_url, transcript, decided_at, created_at, updated_at)
+    - Proper defaults: gen_random_uuid() for id, 'draft' for status, 'other' for category, now() for timestamps
+    - FK constraint: user_id references auth.users(id) ON DELETE CASCADE
+  - Created indexes on: user_id, status, category, created_at DESC
+  - Enabled RLS with 4 policies: SELECT, INSERT, UPDATE, DELETE (users access only their own data)
+  - Trigger for automatic updated_at using existing update_updated_at_column() function
+  - Applied migration via Supabase MCP (success)
+  - Created packages/types/src/decision.ts with:
+    - DecisionsDecision interface (camelCase)
+    - DecisionsDecisionRow interface (snake_case for DB)
+    - Helper functions: toDecisionsDecision(), toDecisionsDecisionRow()
+    - Input types: CreateDecisionsDecisionInput, UpdateDecisionsDecisionInput
+  - Updated packages/types/src/index.ts to export from decision module
+  - Verified table structure via MCP query
+  - pnpm build and pnpm lint pass successfully
+- Files changed:
+  - supabase/migrations/003_decisions.sql (new)
+  - packages/types/src/decision.ts (new)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - Database already has a `decisions` table with different structure; PRD uses "Decisions" prefix pattern
+  - Reusing update_updated_at_column() function created in 001_users_profile.sql
+  - Creating both camelCase TypeScript types and snake_case row types helps with DB operations
+  - Include helper functions for type conversion (toEntity/toRow) in type modules
+---
+
+## 01/15/2026 - US-014
+Iteration: 14
+- What was implemented:
+  - Created supabase/migrations/004_decision_options.sql with:
+    - DecisionsDecisionOptions table with all required fields (id, decision_id, title, description, is_chosen, order_index, created_at, updated_at)
+    - FK constraint on decision_id referencing DecisionsDecisions(id) ON DELETE CASCADE
+    - Index on decision_id for efficient joins
+    - RLS policies (SELECT, INSERT, UPDATE, DELETE) based on ownership through parent decision
+    - Trigger for automatic updated_at using existing update_updated_at_column() function
+  - Applied migration via Supabase MCP and verified:
+    - Table structure correct
+    - FK constraint exists (DecisionsDecisionOptions_decision_id_fkey)
+    - Index idx_decisions_decision_options_decision_id created
+    - 4 RLS policies with proper ownership chain checks
+  - Created packages/types/src/decision-option.ts with:
+    - DecisionsDecisionOption interface (camelCase)
+    - DecisionsDecisionOptionRow interface (snake_case for DB)
+    - Helper functions: toDecisionsDecisionOption(), toDecisionsDecisionOptionRow()
+    - Input types: CreateDecisionsDecisionOptionInput, UpdateDecisionsDecisionOptionInput
+  - Updated packages/types/src/index.ts to export from decision-option module
+  - pnpm build and pnpm lint pass successfully
+- Files changed:
+  - supabase/migrations/004_decision_options.sql (new)
+  - packages/types/src/decision-option.ts (new)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - RLS for child tables uses EXISTS subquery to check ownership via parent table
+  - The pattern `EXISTS (SELECT 1 FROM parent WHERE parent.id = child.parent_id AND parent.user_id = auth.uid())` works well for nested ownership
+  - TypeScript type file naming: use kebab-case (decision-option.ts) matching the entity name
+---
+
+## 01/15/2026 - US-015
+Iteration: 15
+- What was implemented:
+  - Created supabase/migrations/005_option_pros_cons.sql with:
+    - DecisionsOptionProsCons table with all required fields (id, option_id, content, is_pro, weight, order_index, created_at, updated_at)
+    - FK constraint on option_id referencing DecisionsDecisionOptions(id) ON DELETE CASCADE
+    - CHECK constraint for weight range (1-5): `weight >= 1 AND weight <= 5`
+    - Index on option_id for efficient joins
+    - RLS policies (SELECT, INSERT, UPDATE, DELETE) using ownership chain through option -> decision -> user
+    - Trigger for automatic updated_at using existing update_updated_at_column() function
+  - Applied migration via Supabase MCP and verified:
+    - Table structure correct with all 8 columns
+    - FK, PK, and CHECK constraints exist
+    - Index idx_decisions_option_pros_cons_option_id created
+    - 4 RLS policies with proper ownership chain checks
+  - Created packages/types/src/option-pro-con.ts with:
+    - DecisionsOptionProCon interface (camelCase)
+    - DecisionsOptionProConRow interface (snake_case for DB)
+    - Helper functions: toDecisionsOptionProCon(), toDecisionsOptionProConRow()
+    - Input types: CreateDecisionsOptionProConInput, UpdateDecisionsOptionProConInput
+  - Updated packages/types/src/index.ts to export from option-pro-con module
+  - pnpm build and pnpm lint pass successfully
+- Files changed:
+  - supabase/migrations/005_option_pros_cons.sql (new)
+  - packages/types/src/option-pro-con.ts (new)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - For deeply nested RLS (grandchild tables), use INNER JOIN pattern: `EXISTS (SELECT 1 FROM child INNER JOIN parent ON ... WHERE child.id = grandchild.child_id AND parent.user_id = auth.uid())`
+  - CHECK constraints in PostgreSQL: `CHECK (field >= min AND field <= max)` for range validation
+  - Continue using kebab-case for TypeScript type file names (option-pro-con.ts)
+---
+
+## 01/15/2026 - US-016
+Iteration: 16
+- What was implemented:
+  - Created supabase/migrations/006_decision_outcomes.sql with:
+    - DecisionsDecisionOutcomes table with all required fields (id, decision_id, rating, notes, audio_url, transcript, recorded_at, created_at, updated_at)
+    - FK constraint on decision_id referencing DecisionsDecisions(id) ON DELETE CASCADE
+    - UNIQUE constraint on decision_id (one outcome per decision)
+    - rating field uses outcome_rating ENUM type
+    - Nullable fields: notes, audio_url, transcript
+    - Index on decision_id (implicit from UNIQUE constraint)
+    - RLS policies (SELECT, INSERT, UPDATE, DELETE) based on ownership through parent decision
+    - Trigger for automatic updated_at using existing update_updated_at_column() function
+  - Applied migration via Supabase MCP and verified:
+    - Table structure with all 9 columns
+    - 3 constraints: PK on id, FK on decision_id, UNIQUE on decision_id
+    - 4 RLS policies with proper ownership chain checks
+  - Created packages/types/src/decision-outcome.ts with:
+    - DecisionsDecisionOutcome interface (camelCase)
+    - DecisionsDecisionOutcomeRow interface (snake_case for DB)
+    - Helper functions: toDecisionsDecisionOutcome(), toDecisionsDecisionOutcomeRow()
+    - Input types: CreateDecisionsDecisionOutcomeInput, UpdateDecisionsDecisionOutcomeInput
+  - Updated packages/types/src/index.ts to export from decision-outcome module
+  - pnpm build and pnpm lint pass successfully
+- Files changed:
+  - supabase/migrations/006_decision_outcomes.sql (new)
+  - packages/types/src/decision-outcome.ts (new)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - For one-to-one relationships, UNIQUE constraint on FK column enforces single child record per parent
+  - RLS for child tables with FK to parent: use simple EXISTS subquery (no JOINs needed for direct parent relationship)
+  - outcome_rating ENUM type was created in 002_enums.sql and can be used directly in table definition
+  - UNIQUE constraint automatically creates an implicit index on the column
+---
+
+## 01/15/2026 - US-017
+Iteration: 17
+- What was implemented:
+  - Created supabase/migrations/007_followup_reminders.sql with:
+    - DecisionsFollowUpReminders table with all required fields (id, decision_id, scheduled_for, sent_at, is_dismissed, created_at, updated_at)
+    - FK constraint on decision_id referencing DecisionsDecisions(id) ON DELETE CASCADE
+    - 3 indexes: decision_id, scheduled_for, sent_at (for querying upcoming and unsent reminders)
+    - is_dismissed boolean field with default false
+    - sent_at nullable field to track when reminder was actually sent
+    - RLS policies (SELECT, INSERT, UPDATE, DELETE) using ownership chain through parent decision
+    - Trigger for automatic updated_at using existing update_updated_at_column() function
+  - Applied migration via Supabase MCP and verified:
+    - Table structure with all 7 columns
+    - 4 indexes (PK + 3 explicit indexes)
+    - 4 RLS policies with proper ownership chain checks
+  - Created packages/types/src/followup-reminder.ts with:
+    - DecisionsFollowUpReminder interface (camelCase)
+    - DecisionsFollowUpReminderRow interface (snake_case for DB)
+    - Helper functions: toDecisionsFollowUpReminder(), toDecisionsFollowUpReminderRow()
+    - Input types: CreateDecisionsFollowUpReminderInput, UpdateDecisionsFollowUpReminderInput
+  - Updated packages/types/src/index.ts to export from followup-reminder module
+  - pnpm build and pnpm lint pass successfully
+- Files changed:
+  - supabase/migrations/007_followup_reminders.sql (new)
+  - packages/types/src/followup-reminder.ts (new)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - Unlike DecisionOutcomes (one-to-one), FollowUpReminders can have multiple reminders per decision (one-to-many)
+  - Multiple indexes on the same table are fine for different query patterns (decision_id for filtering by decision, scheduled_for for finding upcoming, sent_at for finding unsent)
+  - RLS pattern for child tables: EXISTS (SELECT 1 FROM parent WHERE parent.id = child.fk AND parent.user_id = auth.uid())
+  - Continue using kebab-case for TypeScript type file names (followup-reminder.ts)
+---
+
+## 01/15/2026 - US-018
+Iteration: 18
+- What was implemented:
+  - Created packages/types/src/api.ts with comprehensive API request/response types:
+    - Common types: ApiError, PaginationMeta, PaginatedResponse<T>
+    - Decision request types: CreateDecisionRequest, UpdateDecisionRequest, ListDecisionsQuery, MarkAsDecidedRequest
+    - Decision response types: DecisionResponse, DecisionListResponse, DecisionSummary, DecisionOptionWithProsCons
+    - Nested creation types: CreateOptionInput, UpdateOptionInput, CreateProConInput
+    - Outcome types: RecordOutcomeRequest, UpdateOutcomeRequest, OutcomeResponse
+    - Reminder types: CreateReminderRequest, UpdateReminderRequest, ReminderResponse, ReminderListResponse
+    - Profile types: CreateProfileRequest, UpdateProfileRequest, ProfileResponse
+    - Stats types: StatsOverviewResponse, StatusCount, CategoryCount, OutcomeRatingCount
+    - Audio types: AudioUploadResponse, TranscriptionRequest, TranscriptionResponse
+    - Extraction types: ExtractedDecision, ExtractedOption, ExtractedProCon, ExtractionRequest
+  - Updated packages/types/src/index.ts to export from api module
+  - pnpm build and pnpm lint pass successfully
+  - Verified imports work from both apps/web and apps/api
+- Files changed:
+  - packages/types/src/api.ts (new)
+  - packages/types/src/index.ts (modified)
+- **Learnings for future iterations:**
+  - API types should be separate from database entity types for cleaner separation
+  - Use Omit and Partial utility types for request input types
+  - Use PaginatedResponse<T> generic for consistent pagination across list endpoints
+  - DecisionResponse extends DecisionsDecision to include nested relations (options, outcome, reminders)
+  - DecisionSummary is a lightweight type for list views without full nested data
+---
+
+## 01/15/2026 - US-019
+Iteration: 19
+- What was implemented:
+  - Created supabase/migrations/008_storage_bucket_audio.sql with:
+    - decision-audio bucket with private access (public: false)
+    - File size limit: 10MB (10485760 bytes)
+    - Allowed MIME types: audio/webm, audio/mp4, audio/mpeg, audio/wav
+    - RLS policy for INSERT: Users can upload to their own folder ({user_id}/)
+    - RLS policy for SELECT: Users can read only their own files
+    - RLS policy for UPDATE: Users can update their own files (for upsert)
+    - RLS policy for DELETE: Users can delete their own files
+  - Applied migration via Supabase MCP (success)
+  - Verified bucket configuration: public=false, file_size_limit=10MB, allowed_mime_types correct
+  - Verified all 4 RLS policies exist with proper ownership checks using storage.foldername(name)
+  - Security advisors show no issues with new storage configuration
+- Files changed:
+  - supabase/migrations/008_storage_bucket_audio.sql (new)
+- **Learnings for future iterations:**
+  - Supabase Storage uses storage.buckets table to store bucket config
+  - Use storage.foldername(name)[1] to extract user folder from path for RLS checks
+  - Cast auth.uid() to text (auth.uid()::text) when comparing with folder name
+  - Use ON CONFLICT DO UPDATE for idempotent bucket creation
+  - RLS policies on storage.objects table control access to files in buckets
+  - Private buckets (public: false) require RLS policies to allow any access
+---
+
+## 01/15/2026 - US-020
+Iteration: 20
+- What was implemented:
+  - Installed @fastify/jwt v8.x (compatible with Fastify 4.x, note: v9.x+ requires Fastify 5.x)
+  - Added fastify-plugin for proper encapsulation handling
+  - Created apps/api/src/plugins/auth.ts with:
+    - JWTUser interface for user payload from Supabase JWT
+    - SupabaseJWTPayload interface matching Supabase Auth JWT structure
+    - Auth plugin that registers @fastify/jwt with SUPABASE_JWT_SECRET
+    - `authenticate` decorator for protecting routes (preHandler hook)
+    - Extracts user info from JWT 'sub' claim to request.jwtUser
+    - Returns 401 Unauthorized for invalid/missing/expired tokens
+  - Created apps/api/src/routes/users.ts with GET /api/me endpoint:
+    - Protected by fastify.authenticate preHandler
+    - Returns user info: id, email, phone, role, aal, session_id, app/user metadata
+  - Updated apps/api/src/config/env.ts with SUPABASE_JWT_SECRET env variable
+  - Updated apps/api/.env.example with SUPABASE_JWT_SECRET documentation
+  - Created comprehensive tests in apps/api/src/__tests__/auth.test.ts:
+    - Test valid token returns 200 with user info
+    - Test no token returns 401
+    - Test invalid token returns 401
+    - Test expired token returns 401
+    - Test wrong auth header format returns 401
+    - Test token signed with wrong secret returns 401
+    - Test minimal user info when only sub/email in token
+- Files changed:
+  - apps/api/package.json (added @fastify/jwt, fastify-plugin)
+  - apps/api/src/config/env.ts (added SUPABASE_JWT_SECRET)
+  - apps/api/.env.example (added SUPABASE_JWT_SECRET)
+  - apps/api/src/index.ts (registered auth plugin)
+  - apps/api/src/routes/index.ts (added users routes)
+  - apps/api/src/plugins/auth.ts (new)
+  - apps/api/src/routes/users.ts (new)
+  - apps/api/src/__tests__/auth.test.ts (new)
+  - pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - @fastify/jwt version mapping: v8.x for Fastify 4.x, v9.x+ for Fastify 5.x
+  - @fastify/jwt decorates request with 'user' by default; use decoratorName option to customize
+  - Use fastify-plugin (fp) to wrap plugins that should not be encapsulated
+  - Supabase JWT structure: sub = user ID, email, phone, role, aal, session_id, app_metadata, user_metadata
+  - For expired token tests, set exp claim manually instead of negative expiresIn (fast-jwt doesn't support negative values)
+  - Test JWT verification by creating separate Fastify instance with different secret
+---
+
+## 01/15/2026 - US-021
+Iteration: 21
+- What was implemented:
+  - Updated AuthContext interface with renamed methods: signIn, signUp (from signInWithEmail, signUpWithEmail)
+  - Added JSDoc comments for all auth methods
+  - Moved AuthProvider from App.tsx to main.tsx to wrap entire app
+  - Simplified App.tsx routing structure: removed nested HomePage component
+  - All routes now have direct access to AuthContext through main.tsx wrapper
+  - Created comprehensive unit test suite for AuthContext (11 tests):
+    - Shows loading state initially
+    - Shows no user when not authenticated
+    - Shows user when authenticated
+    - Updates state when onAuthStateChange fires
+    - Calls signInWithPassword when signIn is called
+    - Calls signUp when signUp is called
+    - Calls signInWithOAuth with google provider when signInWithGoogle is called
+    - Calls signOut when signOut is called
+    - Throws error when signIn fails
+    - Unsubscribes from auth state changes on unmount
+    - Throws error when useAuth is used outside AuthProvider
+  - Updated Login.tsx and Signup.tsx to use new method names (signIn, signUp)
+  - Installed @testing-library/user-event for test interactions
+- Files changed:
+  - apps/web/src/contexts/AuthContext.tsx (modified)
+  - apps/web/src/main.tsx (modified - added AuthProvider)
+  - apps/web/src/App.tsx (simplified routing)
+  - apps/web/src/pages/Login.tsx (updated method call)
+  - apps/web/src/pages/Signup.tsx (updated method call)
+  - apps/web/src/__tests__/AuthContext.test.tsx (new)
+  - apps/web/package.json (added @testing-library/user-event)
+  - pnpm-lock.yaml
+- **Learnings for future iterations:**
+  - AuthProvider should wrap the entire app at main.tsx level for consistent access
+  - Nested routing in React Router should avoid re-declaring providers
+  - @testing-library/user-event is useful for simulating user interactions in tests
+  - vi.mock() must be called before importing the mocked module in Vitest
+  - AuthChangeEvent type is not exported from @decisions/supabase - define locally if needed
+  - Use let variable with type annotation for capturing values in async test closures
+---
+
