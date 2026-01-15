@@ -463,8 +463,8 @@
         "Test unitario per rendering"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Updated Signup page with app branding, Italian translations, name field (optional), client-side validation, 27 unit tests. Route is /signup (matching existing App.tsx)"
     },
     {
       "id": "US-026",
