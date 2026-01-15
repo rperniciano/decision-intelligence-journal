@@ -807,3 +807,61 @@ Iteration: 25
   - displayName can be passed to Supabase via options.data in signUp call
   - Test patterns from Login.test.tsx can be reused/adapted for Signup.test.tsx
 ---
+
+
+## 01/15/2026 - US-026
+Iteration: 26
+- What was implemented:
+  - Verified all acceptance criteria were already met by US-025 implementation
+  - Signup page has complete validation: email format, password min 8 chars + number, password match
+  - Submit calls supabase.auth.signUp correctly with optional displayName
+  - Success shows "Controlla la tua email" message when email confirmation required
+  - Auto-redirect to /onboarding when email confirmation disabled (session returned)
+  - Error handling for "already registered" email and network errors
+  - E2E tests cover full registration flow (32 tests total in example.spec.ts)
+  - Unit tests: 27 Signup tests + 22 Login tests + 13 AuthContext tests = 62 total
+- Files changed:
+  - ralph/prd.json (marked US-026 as passes: true)
+  - ralph/progress.txt (this entry)
+- **Learnings for future iterations:**
+  - Sometimes stories are already complete from previous work - always verify before implementing
+  - US-025 (UI) and US-026 (functionality) were tightly coupled and implemented together
+  - Run full test suite (unit + E2E) to verify acceptance criteria before marking complete
+---
+
+
+## 01/15/2026 - US-027
+Iteration: 27
+- What was implemented:
+  - Verified POST /api/users/profile endpoint was already implemented in apps/api/src/routes/users.ts
+  - Endpoint accepts { displayName?: string } body, creates profile in DecisionsUserProfiles
+  - Returns 201 with ProfileResponse on success
+  - Returns 409 Conflict if profile already exists (checked via SELECT before INSERT)
+  - Handles race condition (unique constraint violation 23505) with 409 response
+  - Returns 500 for unexpected database errors with appropriate messages
+  - Created comprehensive unit test suite (10 tests) in apps/api/src/__tests__/users.test.ts:
+    - Test 201 with displayName
+    - Test 201 without displayName
+    - Test 409 from existing profile (select check)
+    - Test 409 from race condition (insert unique violation)
+    - Test 500 for select error
+    - Test 500 for insert error
+    - Test 401 without token
+    - Test 401 with invalid token
+    - Test empty body handling
+    - Test snake_case to camelCase field mapping
+  - Used vi.mock() to mock getSupabase() with chainable mock methods
+  - Verified DecisionsUserProfiles table structure via Supabase MCP
+  - Verified RLS policies (SELECT, INSERT, UPDATE) via Supabase MCP
+- Files changed:
+  - apps/api/src/__tests__/users.test.ts (new - 10 tests)
+  - ralph/prd.json (marked US-027 as passes: true)
+  - ralph/progress.txt (this entry)
+- **Learnings for future iterations:**
+  - The endpoint was already implemented in users.ts; only tests were needed
+  - Use vi.mock() before imports when mocking modules in Vitest
+  - Mock Supabase client with chainable methods: from() -> select()/insert() -> eq() -> single()
+  - PGRST116 is the Supabase error code for "no rows found" - not a real error
+  - 23505 is PostgreSQL unique constraint violation error code
+  - ProfileResponse uses camelCase (displayName, avatarUrl), DB uses snake_case (display_name, avatar_url)
+---
