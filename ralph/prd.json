@@ -446,8 +446,8 @@
         "Test E2E: verificare che click apre popup/redirect Google (mock per CI)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: OAuth implementation already existed in AuthContext.signInWithGoogle. Added 3 E2E tests for OAuth flow, button styling, and button disabled state during submission. Improved screenshot tests to handle protocol errors gracefully."
     },
     {
       "id": "US-025",
