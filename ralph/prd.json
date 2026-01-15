@@ -724,8 +724,8 @@
         "Test integrazione con Supabase Storage"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: POST /api/audio/upload endpoint with multipart support, 10MB limit, MIME type validation, Supabase Storage upload, 15 unit tests"
     },
     {
       "id": "US-041",

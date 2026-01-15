@@ -1304,3 +1304,47 @@ Iteration: 1
   - Blob sources need URL.createObjectURL and cleanup via URL.revokeObjectURL
   - Audio preload="metadata" loads duration without full audio download
 ---
+
+## 01/16/2026 - US-040
+Iteration: 1
+- What was implemented:
+  - Created POST /api/audio/upload endpoint in apps/api/src/routes/audio.ts
+  - Endpoint is protected by JWT authentication (fastify.authenticate preHandler)
+  - Accepts multipart/form-data with 'audio' field
+  - Validates MIME type: audio/webm, audio/mp4, audio/mpeg, audio/wav, audio/x-wav, audio/wave
+  - Validates file size: max 10MB (10485760 bytes)
+  - Streaming validation: rejects files during stream if they exceed limit (early abort)
+  - Also handles busboy truncated flag for server-side limits
+  - Uploads to Supabase Storage bucket 'decision-audio'
+  - Path format: {user_id}/{uuid}.{extension} (e.g., 123e4567-e89b-12d3-a456-426614174000/abc123.webm)
+  - Extension is derived from MIME type via getExtensionFromMimeType helper
+  - Returns AudioUploadResponse: { url: string, path: string, size: number }
+  - Error responses: 400 (no file), 413 (too large), 415 (wrong type), 500 (storage error)
+  - Registered route in apps/api/src/routes/index.ts with /api/audio prefix
+  - @fastify/multipart was already installed and configured (50MB server limit, 10MB endpoint limit)
+  - Created comprehensive unit test suite (15 tests) in audio.test.ts:
+    - Successful upload tests (webm, mp4, wav formats)
+    - Extension mapping tests
+    - 400 error test (no file)
+    - 415 error tests (text/plain, image/png)
+    - 413 error test (file > 10MB)
+    - 500 error test (storage failure)
+    - 401 error tests (no token, invalid token)
+    - User-specific path verification
+    - Content type verification in upload options
+    - File size in response verification
+- Files changed:
+  - apps/api/src/routes/audio.ts (new)
+  - apps/api/src/__tests__/audio.test.ts (new)
+  - apps/api/src/routes/index.ts (modified - register audio routes)
+- **Learnings for future iterations:**
+  - @fastify/multipart was already installed; just needed to create the route
+  - Use request.file() to get single uploaded file in multipart request
+  - Stream file chunks to buffer while checking size limit for early abort
+  - Check file.file.truncated for busboy's file size limit detection
+  - Mock crypto.randomUUID with vi.mock('crypto', ...) for predictable test paths
+  - Create multipart payloads manually with boundary string for app.inject tests
+  - Supabase storage.from().upload() returns { data: { path }, error }
+  - Supabase storage.from().getPublicUrl() returns { data: { publicUrl } }
+  - AudioUploadResponse type was already defined in @decisions/types/src/api.ts
+---
