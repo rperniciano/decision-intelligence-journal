@@ -1171,3 +1171,50 @@ Iteration: 1
   - role="timer" is appropriate semantic role for countdown/elapsed time displays
   - Export utility functions separately for reuse (formatTime)
 ---
+
+## 01/16/2026 - US-037
+Iteration: 1
+- What was implemented:
+  - Created VoiceRecorder composed component in src/components/audio/VoiceRecorder.tsx
+  - Combines RecordButton, RecordingTimer, and WaveformVisualizer sub-components
+  - Props: onRecordingComplete(blob), maxDuration (default 300s), className
+  - Implemented state machine with states: idle, requesting_permission, recording, stopped
+  - Exposed state via data-state attribute on container for testing/debugging
+  - Permission handling: requests microphone via navigator.mediaDevices.getUserMedia()
+  - Italian error messages for all error scenarios:
+    - "Permesso microfono negato" (permission denied)
+    - "Il tuo browser non supporta la registrazione audio" (unsupported)
+    - "Nessun microfono trovato" (no microphone)
+    - "Registrazione interrotta: durata massima raggiunta" (max duration)
+    - "Registrazione troppo breve" (too short)
+    - "Errore durante la registrazione" (generic error)
+  - Auto-stop when recordingTime >= maxDuration
+  - onRecordingComplete callback fires when audioBlob is available
+  - Integrates useMediaRecorder hook for recording and useAudioAnalyser for visualization
+  - Layout: flex column, centered, gap-6 spacing, max-w-md for visualizer
+  - Updated audio/index.ts to export VoiceRecorder, VoiceRecorderProps, VoiceRecorderState
+  - Created comprehensive unit test suite (40 tests) in VoiceRecorder.test.tsx:
+    - Rendering tests (container, button, timer, visualizer, className)
+    - State management tests (idle, recording, stopped states)
+    - Recording flow tests (start/stop, permission request, analyser integration)
+    - Callback tests (onRecordingComplete)
+    - MaxDuration tests (auto-stop, custom value)
+    - Error handling tests (all error types, accessibility)
+    - Button state tests (disabled when unsupported, recording state)
+    - Timer display tests (format, color states)
+    - Waveform tests (frequency data, active state)
+    - Cleanup tests (unmount)
+    - Layout tests (classes, spacing)
+  - Added mocks for ResizeObserver, canvas context, requestAnimationFrame in tests
+- Files changed:
+  - apps/web/src/components/audio/VoiceRecorder.tsx (new)
+  - apps/web/src/__tests__/VoiceRecorder.test.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+- **Learnings for future iterations:**
+  - VoiceRecorder needs its own MediaStream for the analyser (separate from useMediaRecorder)
+  - Use vi.stubGlobal() for mocking ResizeObserver and requestAnimationFrame
+  - Use vi.useRealTimers() in tests that involve real async operations (getUserMedia)
+  - Canvas and ResizeObserver mocks need to be at module scope before tests
+  - State machine can be exposed via data-state attribute for debugging
+  - Error messages should use || undefined pattern for null coalescing
+---

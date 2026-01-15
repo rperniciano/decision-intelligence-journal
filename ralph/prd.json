@@ -670,8 +670,8 @@
         "Test unitario per flow stati"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: VoiceRecorder component with state machine (idle/requesting_permission/recording/stopped), Italian error messages for permission denied/unsupported browser/no mic/max duration/recording too short, auto-stop at maxDuration, integrates useMediaRecorder and useAudioAnalyser hooks. 40 unit tests."
     },
     {
       "id": "US-038",
