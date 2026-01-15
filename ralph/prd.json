@@ -705,8 +705,8 @@
         "Test unitario per controlli"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: AudioPlayer component with play/pause button, progress bar with seek, time display (current/total), keyboard accessibility (Enter/Space for play, ArrowLeft/Right for seek). 53 unit tests. Italian aria-labels."
     },
     {
       "id": "US-040",

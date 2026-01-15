@@ -1259,3 +1259,48 @@ Iteration: 1
   - E2E tests check for authentication state before testing page-specific elements
   - Console.log placeholder in continue handler triggers lint warning (acceptable for placeholder)
 ---
+
+## 01/16/2026 - US-039
+Iteration: 1
+- What was implemented:
+  - Created AudioPlayer component in src/components/audio/AudioPlayer.tsx
+  - Props: src (URL string or Blob), onEnded callback, className
+  - Play/pause toggle button with blue styling (bg-blue-500)
+  - Progress bar with click-to-seek functionality
+  - Progress thumb indicator that follows playback position
+  - Time display: current time / total duration (MM:SS format)
+  - formatDuration utility function for time formatting
+  - Italian aria-labels: "Lettore audio", "Riproduci", "Pausa", "Progresso audio"
+  - Keyboard accessibility:
+    - Enter/Space on play button toggles play/pause
+    - ArrowLeft/Right on progress bar skips ±5 seconds
+  - Works with both URL strings and Blob objects (creates/revokes object URLs)
+  - Disabled state before audio metadata loads
+  - Resets to beginning when audio ends
+  - Created comprehensive unit tests (53 tests) in AudioPlayer.test.tsx:
+    - formatDuration utility tests (6 tests)
+    - Rendering tests (7 tests)
+    - Audio source handling tests (3 tests)
+    - Play/Pause button tests (9 tests)
+    - Keyboard accessibility tests (4 tests)
+    - Progress bar tests (5 tests)
+    - Seek functionality tests (3 tests)
+    - Progress bar keyboard tests (5 tests)
+    - Time display tests (6 tests)
+    - Playback events tests (3 tests)
+    - Styling tests (4 tests)
+    - Edge cases tests (3 tests)
+  - Updated audio/index.ts to export AudioPlayer, AudioPlayerProps, formatDuration
+- Files changed:
+  - apps/web/src/components/audio/AudioPlayer.tsx (new)
+  - apps/web/src/__tests__/AudioPlayer.test.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+- **Learnings for future iterations:**
+  - HTMLAudioElement events: loadedmetadata, timeupdate, play, pause, ended
+  - Use Object.defineProperty to mock audio.duration and audio.currentTime in tests
+  - Progress bar seeks via: (clickX - rect.left) / rect.width * duration
+  - Keyboard seek skips 5 seconds (configurable amount)
+  - formatDuration rounds down (Math.floor) for clean display
+  - Blob sources need URL.createObjectURL and cleanup via URL.revokeObjectURL
+  - Audio preload="metadata" loads duration without full audio download
+---
