@@ -579,8 +579,8 @@
         "Test unitario con mock MediaRecorder"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Renamed useVoiceRecorder to useMediaRecorder, added recordingTime alias for duration per PRD spec, 25 unit tests with mocked MediaRecorder API. Exposes startRecording, stopRecording, pauseRecording, resumeRecording, isRecording, isPaused, recordingTime, error, audioBlob. Auto-detects best MIME type (webm/mp4/wav), handles permissions and errors, backwards compatible via useVoiceRecorder alias."
     },
     {
       "id": "US-033",

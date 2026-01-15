@@ -999,3 +999,36 @@ Iteration: 1
   - Testing-library role queries: use aria-label for buttons without text content
   - Menu items in dropdown have role="menuitem", hamburger button needs descriptive aria-label
 ---
+
+
+## 01/15/2026 - US-032
+Iteration: 1
+- What was implemented:
+  - Renamed useVoiceRecorder hook to useMediaRecorder (git mv preserves history)
+  - Added recordingTime as alias for duration per PRD specification
+  - Updated interface name to UseMediaRecorderReturn with comprehensive JSDoc docs
+  - Added backwards-compatible exports: useVoiceRecorder alias and UseVoiceRecorderReturn type
+  - Updated VoiceCapture.tsx to use new hook import
+  - Created comprehensive unit test suite (25 tests) in useMediaRecorder.test.ts:
+    - Initial state tests (all values at defaults, recordingTime alias works)
+    - startRecording tests (permission request, state reset, error handling)
+    - stopRecording tests (provides audioBlob, error for short recordings)
+    - pauseRecording/resumeRecording tests
+    - resetRecording tests (clears all state)
+    - Duration timer tests (increments, pauses correctly, alias works during recording)
+    - Max duration auto-stop test (300 seconds)
+    - MIME type support tests (webm preferred, mp4 fallback)
+    - Backwards compatibility tests (useVoiceRecorder alias)
+    - Cleanup tests (URL revocation, stream tracks)
+- Files changed:
+  - apps/web/src/hooks/useMediaRecorder.ts (renamed from useVoiceRecorder.ts)
+  - apps/web/src/__tests__/useMediaRecorder.test.ts (new)
+  - apps/web/src/pages/VoiceCapture.tsx (import updated)
+- **Learnings for future iterations:**
+  - Use globalThis cast to any (const g = globalThis as any) for mocking browser APIs in tests
+  - MockMediaRecorder needs ondataavailable, onstop, onerror handlers and state management
+  - vi.useFakeTimers() required for testing duration increments
+  - MediaRecorder.isTypeSupported() should be mocked as static method on class
+  - Hook already existed with full functionality - main work was renaming and adding alias
+  - Backwards compatibility via export const useVoiceRecorder = useMediaRecorder
+---
