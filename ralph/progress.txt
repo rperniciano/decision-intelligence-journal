@@ -1,3 +1,42 @@
 # Ralph Progress Log
 Started: 01/15/2026 18:58:33
 ---
+
+## Codebase Patterns
+- Turborepo pipeline: build depends on ^build, lint and test run in parallel
+- ESLint uses .eslintrc.cjs (CommonJS) due to root package.json "type": "module"
+- tsconfig.node.json requires composite: true for project references
+- pnpm workspaces: apps/* and packages/*
+- Shared types in packages/shared (named @decisions/shared)
+- Root scripts: dev, build, lint, test, format
+
+---
+
+## 01/15/2026 - US-001
+Iteration: 1
+- What was implemented:
+  - Added .nvmrc with Node.js 20.x
+  - Added `dist` to .gitignore
+  - Added `test` task to turbo.json pipeline
+  - Added `test` script to root package.json
+  - Fixed .eslintrc.js -> .eslintrc.cjs for CommonJS compatibility
+  - Fixed tsconfig.node.json composite setting for project references
+  - Removed unused type imports to fix TypeScript errors
+  - Fixed lint errors (curly braces, unescaped entities)
+- Files changed:
+  - .nvmrc (new)
+  - .eslintrc.cjs (renamed from .eslintrc.js)
+  - .gitignore
+  - turbo.json
+  - package.json
+  - apps/web/tsconfig.node.json
+  - apps/web/src/App.tsx
+  - apps/web/src/hooks/useVoiceRecorder.ts
+  - apps/web/src/pages/Dashboard.tsx
+  - apps/api/src/routes/health.ts
+- **Learnings for future iterations:**
+  - ESLint config must be .cjs (CommonJS) when root package.json has "type": "module"
+  - tsconfig.node.json needs composite: true and cannot have noEmit: true when used as project reference
+  - noUnusedLocals in tsconfig catches unused type aliases - remove them rather than adding eslint-disable
+  - Build errors for unused variables are TypeScript errors (TS6133, TS6196), not ESLint errors
+---
