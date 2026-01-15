@@ -688,8 +688,8 @@
         "Test E2E: navigazione a pagina"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created RecordDecisionPage with Italian UI (title: 'Parla della tua decisione'), VoiceRecorder integration, preview state with Riascolta/Riprova/Continua buttons, mobile-first full-screen layout. 38 unit tests + 8 E2E tests."
     },
     {
       "id": "US-039",

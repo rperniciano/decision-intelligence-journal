@@ -1218,3 +1218,44 @@ Iteration: 1
   - State machine can be exposed via data-state attribute for debugging
   - Error messages should use || undefined pattern for null coalescing
 ---
+
+## 01/16/2026 - US-038
+Iteration: 1
+- What was implemented:
+  - Created RecordDecisionPage component in apps/web/src/pages/RecordDecisionPage.tsx
+  - Italian UI text: Title "Parla della tua decisione", subtitle hint about describing situation/options
+  - Two page states: idle (shows VoiceRecorder) and preview (shows action buttons)
+  - Preview state with three buttons: Riascolta, Riprova, Continua
+  - Each button has Italian aria-labels for accessibility
+  - Success message "Registrazione completata" with green checkmark icon
+  - Mobile-first design: min-h-screen, flex column layout, centered content
+  - Footer tip: "Durata massima: 5 minuti" in idle, "Premi Continua per procedere" in preview
+  - Audio playback integration via hidden <audio> element
+  - Proper cleanup: URL.revokeObjectURL on retry and unmount
+  - Updated App.tsx route from VoiceCapture to RecordDecisionPage
+  - Created comprehensive unit tests (38 tests) covering:
+    - Rendering (page container, title, subtitle, footer, VoiceRecorder, data-state)
+    - Page structure (min-h-screen, bg-white, flex column, centered main)
+    - Recording flow (transition to preview, create object URL)
+    - Preview state UI (success message, buttons, audio element, footer)
+    - Preview actions (aria-labels, region label)
+    - Retry functionality (return to idle, revoke URL)
+    - Continue functionality (placeholder log)
+    - Button styling (gray/blue backgrounds, min-h-[48px])
+    - Cleanup (revoke URL on unmount)
+    - Accessibility (main landmark, heading structure, button types)
+  - Added 8 E2E tests for record page navigation and rendering
+- Files changed:
+  - apps/web/src/pages/RecordDecisionPage.tsx (new)
+  - apps/web/src/__tests__/RecordDecisionPage.test.tsx (new)
+  - apps/web/src/App.tsx (modified - use RecordDecisionPage)
+  - apps/e2e/tests/example.spec.ts (modified - added 8 E2E tests)
+- **Learnings for future iterations:**
+  - RecordDecisionPage replaces VoiceCapture for the PRD-specified UI
+  - VoiceCapture.tsx still exists but is no longer used in routes
+  - Preview buttons use Italian text: Riascolta, Riprova, Continua
+  - Mock VoiceRecorder component in tests to simplify and isolate page logic
+  - Use data-state attribute on page container for state tracking and testing
+  - E2E tests check for authentication state before testing page-specific elements
+  - Console.log placeholder in continue handler triggers lint warning (acceptable for placeholder)
+---
