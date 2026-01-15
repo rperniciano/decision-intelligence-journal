@@ -5,7 +5,9 @@
       "mcp__plugin_supabase_supabase__list_tables",
       "mcp__plugin_supabase_supabase__get_logs",
       "mcp__plugin_supabase_supabase__list_migrations",
-      "mcp__plugin_supabase_supabase__execute_sql"
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ]
   }
 }
