@@ -80,6 +80,68 @@ async function usersRoutes(
   );
 
   /**
+   * GET /users/profile
+   *
+   * Returns the profile for the authenticated user.
+   * Requires a valid JWT token in the Authorization header.
+   *
+   * @returns {ProfileResponse} The user's profile
+   * @throws {401} If the token is missing or invalid
+   * @throws {404} If the profile does not exist
+   * @throws {500} If there's a database error
+   */
+  fastify.get<{
+    Reply: ProfileResponse | ApiError;
+  }>(
+    '/users/profile',
+    {
+      preHandler: [fastify.authenticate],
+    },
+    async (request, reply) => {
+      const user: JWTUser = request.jwtUser;
+
+      const supabase = getSupabase();
+
+      // Fetch user profile
+      const { data: profile, error: selectError } = await supabase
+        .from('DecisionsUserProfiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (selectError) {
+        // PGRST116 is "no rows returned" - profile not found
+        if (selectError.code === 'PGRST116') {
+          return reply.status(404).send({
+            statusCode: 404,
+            error: 'Not Found',
+            message: 'Profile not found for this user',
+          });
+        }
+
+        // Any other error is a problem
+        fastify.log.error({ error: selectError }, 'Error fetching profile');
+        return reply.status(500).send({
+          statusCode: 500,
+          error: 'Internal Server Error',
+          message: 'Failed to fetch profile',
+        });
+      }
+
+      const profileRow = profile as UserProfileRow;
+
+      return reply.status(200).send({
+        id: profileRow.id,
+        displayName: profileRow.display_name || undefined,
+        avatarUrl: profileRow.avatar_url || undefined,
+        onboardingCompleted: profileRow.onboarding_completed,
+        createdAt: profileRow.created_at,
+        updatedAt: profileRow.updated_at,
+      });
+    }
+  );
+
+  /**
    * POST /users/profile
    *
    * Creates a new profile for the authenticated user.

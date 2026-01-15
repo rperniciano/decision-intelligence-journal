@@ -476,3 +476,239 @@ describe('POST /api/users/profile', () => {
     expect(body.updated_at).toBeUndefined();
   });
 });
+
+describe('GET /api/users/profile', () => {
+  let app: FastifyInstance;
+  let mockSupabase: ReturnType<typeof createMockSupabase>;
+
+  const testUser = {
+    sub: '123e4567-e89b-12d3-a456-426614174000',
+    email: 'test@example.com',
+    role: 'authenticated',
+  };
+
+  beforeAll(async () => {
+    app = Fastify();
+
+    // Register auth plugin with test secret
+    await app.register(authPlugin, {
+      jwtSecret: TEST_JWT_SECRET,
+    });
+
+    // Register users routes
+    await app.register(usersRoutes, { prefix: '/api' });
+
+    await app.ready();
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  beforeEach(() => {
+    // Reset all mocks before each test
+    vi.clearAllMocks();
+
+    // Create fresh mock Supabase for each test
+    mockSupabase = createMockSupabase();
+    vi.mocked(getSupabase).mockReturnValue(mockSupabase as unknown as ReturnType<typeof getSupabase>);
+  });
+
+  it('returns 200 with profile when profile exists', async () => {
+    const createdAt = '2024-01-15T10:00:00.000Z';
+    const updatedAt = '2024-01-15T11:00:00.000Z';
+
+    // Mock: profile exists
+    mockSupabase._mocks.single.mockResolvedValueOnce({
+      data: {
+        id: testUser.sub,
+        display_name: 'John Doe',
+        avatar_url: 'https://example.com/avatar.jpg',
+        onboarding_completed: true,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      },
+      error: null,
+    });
+
+    const token = createTestToken(app, testUser);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = JSON.parse(response.body);
+    expect(body.id).toBe(testUser.sub);
+    expect(body.displayName).toBe('John Doe');
+    expect(body.avatarUrl).toBe('https://example.com/avatar.jpg');
+    expect(body.onboardingCompleted).toBe(true);
+    expect(body.createdAt).toBe(createdAt);
+    expect(body.updatedAt).toBe(updatedAt);
+  });
+
+  it('returns 200 with profile when displayName and avatarUrl are null', async () => {
+    const createdAt = '2024-01-15T10:00:00.000Z';
+    const updatedAt = '2024-01-15T10:00:00.000Z';
+
+    // Mock: profile exists with null optional fields
+    mockSupabase._mocks.single.mockResolvedValueOnce({
+      data: {
+        id: testUser.sub,
+        display_name: null,
+        avatar_url: null,
+        onboarding_completed: false,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      },
+      error: null,
+    });
+
+    const token = createTestToken(app, testUser);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = JSON.parse(response.body);
+    expect(body.id).toBe(testUser.sub);
+    expect(body.displayName).toBeUndefined();
+    expect(body.avatarUrl).toBeUndefined();
+    expect(body.onboardingCompleted).toBe(false);
+    expect(body.createdAt).toBe(createdAt);
+    expect(body.updatedAt).toBe(updatedAt);
+  });
+
+  it('returns 404 when profile does not exist', async () => {
+    // Mock: profile doesn't exist (PGRST116)
+    mockSupabase._mocks.single.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'PGRST116', message: 'No rows found' },
+    });
+
+    const token = createTestToken(app, testUser);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(404);
+
+    const body = JSON.parse(response.body);
+    expect(body.statusCode).toBe(404);
+    expect(body.error).toBe('Not Found');
+    expect(body.message).toBe('Profile not found for this user');
+  });
+
+  it('returns 500 when database query fails', async () => {
+    // Mock: database error
+    mockSupabase._mocks.single.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'UNEXPECTED', message: 'Database connection failed' },
+    });
+
+    const token = createTestToken(app, testUser);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(500);
+
+    const body = JSON.parse(response.body);
+    expect(body.statusCode).toBe(500);
+    expect(body.error).toBe('Internal Server Error');
+    expect(body.message).toBe('Failed to fetch profile');
+  });
+
+  it('returns 401 when no token is provided', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+    });
+
+    expect(response.statusCode).toBe(401);
+
+    const body = JSON.parse(response.body);
+    expect(body.error).toBe('Unauthorized');
+  });
+
+  it('returns 401 when invalid token is provided', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+      headers: {
+        authorization: 'Bearer invalid-token',
+      },
+    });
+
+    expect(response.statusCode).toBe(401);
+
+    const body = JSON.parse(response.body);
+    expect(body.error).toBe('Unauthorized');
+  });
+
+  it('correctly maps response fields from snake_case to camelCase', async () => {
+    const createdAt = '2024-01-15T10:00:00.000Z';
+    const updatedAt = '2024-01-15T11:00:00.000Z';
+
+    // Mock: profile exists
+    mockSupabase._mocks.single.mockResolvedValueOnce({
+      data: {
+        id: testUser.sub,
+        display_name: 'Test Name',
+        avatar_url: 'https://example.com/avatar.jpg',
+        onboarding_completed: true,
+        created_at: createdAt,
+        updated_at: updatedAt,
+      },
+      error: null,
+    });
+
+    const token = createTestToken(app, testUser);
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/users/profile',
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const body = JSON.parse(response.body);
+    // Verify camelCase fields are present
+    expect(body.id).toBe(testUser.sub);
+    expect(body.displayName).toBe('Test Name');
+    expect(body.avatarUrl).toBe('https://example.com/avatar.jpg');
+    expect(body.onboardingCompleted).toBe(true);
+    expect(body.createdAt).toBe(createdAt);
+    expect(body.updatedAt).toBe(updatedAt);
+    // Verify snake_case fields are NOT present
+    expect(body.display_name).toBeUndefined();
+    expect(body.avatar_url).toBeUndefined();
+    expect(body.onboarding_completed).toBeUndefined();
+    expect(body.created_at).toBeUndefined();
+    expect(body.updated_at).toBeUndefined();
+  });
+});
