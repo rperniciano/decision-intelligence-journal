@@ -3,7 +3,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import AuthGuard from './components/AuthGuard';
-import VoiceCapture from './pages/VoiceCapture';
+import RecordDecisionPage from './pages/RecordDecisionPage';
 
 /**
  * App component with route configuration
@@ -12,7 +12,7 @@ import VoiceCapture from './pages/VoiceCapture';
  * - /login : Login page (public)
  * - /signup : Signup page (public)
  * - /dashboard : Dashboard page (protected)
- * - /record : Voice recording page (protected)
+ * - /record : Record decision page (protected)
  * - * : Redirects to /dashboard
  *
  * AuthProvider is configured in main.tsx to wrap the entire app.
@@ -27,7 +27,7 @@ function App() {
       {/* Protected routes - wrapped in AuthGuard */}
       <Route element={<AuthGuard />}>
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/record" element={<VoiceCapture />} />
+        <Route path="/record" element={<RecordDecisionPage />} />
       </Route>
 
       {/* Default redirect */}
