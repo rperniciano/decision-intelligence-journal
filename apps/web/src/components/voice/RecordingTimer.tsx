@@ -38,10 +38,7 @@ function formatDuration(seconds: number): string {
  * <RecordingTimer duration={duration} className="text-xl" />
  * ```
  */
-export default function RecordingTimer({
-  duration,
-  className = '',
-}: RecordingTimerProps) {
+export default function RecordingTimer({ duration, className = '' }: RecordingTimerProps) {
   const formattedTime = formatDuration(duration);
 
   return (

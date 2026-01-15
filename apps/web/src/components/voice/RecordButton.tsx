@@ -99,9 +99,7 @@ export default function RecordButton({
         'shadow-lg shadow-indigo-500/30',
       ].join(' ');
 
-  const disabledClasses = disabled
-    ? 'opacity-50 cursor-not-allowed pointer-events-none'
-    : '';
+  const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '';
 
   const ariaLabel = isRecording ? 'Stop recording' : 'Start recording';
 

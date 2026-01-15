@@ -15,12 +15,7 @@
 
 import { useState, useCallback } from 'react';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
-import {
-  RecordButton,
-  RecordingTimer,
-  AudioPreview,
-  PermissionError,
-} from '../components/voice';
+import { RecordButton, RecordingTimer, AudioPreview, PermissionError } from '../components/voice';
 import TranscriptEditor from '../components/TranscriptEditor';
 import type { PermissionErrorType } from '../components/voice/PermissionError';
 
@@ -57,9 +52,7 @@ interface UploadError {
 /**
  * Map error types from the hook to PermissionError component types
  */
-function mapErrorTypeToPermissionError(
-  errorType: string
-): PermissionErrorType {
+function mapErrorTypeToPermissionError(errorType: string): PermissionErrorType {
   switch (errorType) {
     case 'permission_denied':
       return 'denied';
@@ -101,8 +94,7 @@ export default function VoiceCapture() {
   const [uploadFlowState, setUploadFlowState] = useState<
     'idle' | 'uploading' | 'transcribing' | 'complete' | 'error'
   >('idle');
-  const [transcriptionResult, setTranscriptionResult] =
-    useState<TranscriptionResult | null>(null);
+  const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionResult | null>(null);
   const [uploadError, setUploadError] = useState<UploadError | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -292,9 +284,7 @@ export default function VoiceCapture() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col items-center justify-center p-6">
       {/* Page header */}
       <header className="absolute top-0 left-0 right-0 p-6">
-        <h1 className="text-lg font-semibold text-slate-400 text-center">
-          Voice Recording
-        </h1>
+        <h1 className="text-lg font-semibold text-slate-400 text-center">Voice Recording</h1>
       </header>
 
       {/* Main content area */}
@@ -304,9 +294,7 @@ export default function VoiceCapture() {
           <PermissionError
             errorType={mapErrorTypeToPermissionError(error.type)}
             message={error.message}
-            onRetry={
-              permissionState !== 'unsupported' ? startRecording : undefined
-            }
+            onRetry={permissionState !== 'unsupported' ? startRecording : undefined}
           />
         )}
 
@@ -325,9 +313,7 @@ export default function VoiceCapture() {
             )}
 
             {/* Instruction text */}
-            <p className="text-slate-400 text-center">
-              Tap the button to start recording
-            </p>
+            <p className="text-slate-400 text-center">Tap the button to start recording</p>
 
             {/* Record button */}
             <RecordButton
@@ -344,24 +330,17 @@ export default function VoiceCapture() {
             {/* Recording indicator */}
             <div className="flex items-center gap-2 text-red-400">
               <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-sm font-medium uppercase tracking-wide">
-                Recording
-              </span>
+              <span className="text-sm font-medium uppercase tracking-wide">Recording</span>
             </div>
 
             {/* Timer */}
             <RecordingTimer duration={duration} />
 
             {/* Stop button */}
-            <RecordButton
-              isRecording={true}
-              onClick={handleRecordClick}
-            />
+            <RecordButton isRecording={true} onClick={handleRecordClick} />
 
             {/* Help text */}
-            <p className="text-slate-500 text-sm text-center">
-              Tap to stop recording
-            </p>
+            <p className="text-slate-500 text-sm text-center">Tap to stop recording</p>
           </>
         )}
 
@@ -381,12 +360,8 @@ export default function VoiceCapture() {
 
             {/* Preview header */}
             <div className="text-center">
-              <h2 className="text-lg font-medium text-slate-200">
-                Review Your Recording
-              </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Listen back before confirming
-              </p>
+              <h2 className="text-lg font-medium text-slate-200">Review Your Recording</h2>
+              <p className="text-slate-400 text-sm mt-1">Listen back before confirming</p>
             </div>
 
             {/* Audio preview with actions */}
@@ -407,12 +382,8 @@ export default function VoiceCapture() {
 
             {/* Status text */}
             <div className="text-center">
-              <h2 className="text-lg font-medium text-slate-200">
-                Uploading...
-              </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Sending your recording to the server
-              </p>
+              <h2 className="text-lg font-medium text-slate-200">Uploading...</h2>
+              <p className="text-slate-400 text-sm mt-1">Sending your recording to the server</p>
             </div>
           </div>
         )}
@@ -425,15 +396,9 @@ export default function VoiceCapture() {
 
             {/* Status text */}
             <div className="text-center">
-              <h2 className="text-lg font-medium text-slate-200">
-                Transcribing...
-              </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                Converting your voice to text
-              </p>
-              <p className="text-slate-500 text-xs mt-2">
-                This may take a minute
-              </p>
+              <h2 className="text-lg font-medium text-slate-200">Transcribing...</h2>
+              <p className="text-slate-400 text-sm mt-1">Converting your voice to text</p>
+              <p className="text-slate-500 text-xs mt-2">This may take a minute</p>
             </div>
           </div>
         )}
@@ -472,12 +437,8 @@ export default function VoiceCapture() {
 
             {/* Error message */}
             <div className="text-center">
-              <h2 className="text-lg font-medium text-slate-200">
-                Something went wrong
-              </h2>
-              <p className="text-slate-400 text-sm mt-1">
-                {uploadError.message}
-              </p>
+              <h2 className="text-lg font-medium text-slate-200">Something went wrong</h2>
+              <p className="text-slate-400 text-sm mt-1">{uploadError.message}</p>
             </div>
 
             {/* Retry button */}
