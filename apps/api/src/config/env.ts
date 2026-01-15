@@ -16,6 +16,7 @@ export const envSchema = z.object({
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  SUPABASE_JWT_SECRET: z.string().optional(),
 
   // AI Services (optional - mock services used if not provided)
   ASSEMBLYAI_API_KEY: z.string().optional(),
@@ -63,6 +64,9 @@ export const fastifyEnvSchema = {
       type: 'string',
     },
     SUPABASE_SERVICE_ROLE_KEY: {
+      type: 'string',
+    },
+    SUPABASE_JWT_SECRET: {
       type: 'string',
     },
     ASSEMBLYAI_API_KEY: {
