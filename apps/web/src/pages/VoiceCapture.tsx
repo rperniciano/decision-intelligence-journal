@@ -14,7 +14,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { useMediaRecorder } from '../hooks/useMediaRecorder';
 import { RecordButton, RecordingTimer, AudioPreview, PermissionError } from '../components/voice';
 import TranscriptEditor from '../components/TranscriptEditor';
 import type { PermissionErrorType } from '../components/voice/PermissionError';
@@ -88,7 +88,7 @@ export default function VoiceCapture() {
     startRecording,
     stopRecording,
     resetRecording,
-  } = useVoiceRecorder();
+  } = useMediaRecorder();
 
   // Upload/transcription flow state
   const [uploadFlowState, setUploadFlowState] = useState<
