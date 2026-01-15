@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import type { User, Session } from '@decisions/supabase';
 
 // Define mock functions and data at module level
 const mockSignOut = vi.fn();
 
-const mockUser = {
+const mockUser: User = {
   id: 'test-user-id',
   email: 'test@example.com',
   app_metadata: {},
@@ -15,18 +16,18 @@ const mockUser = {
   created_at: '2024-01-01T00:00:00.000Z',
 };
 
-const mockSession = {
+const mockSession: Session = {
   access_token: 'test-token',
   refresh_token: 'test-refresh-token',
   expires_in: 3600,
-  token_type: 'bearer' as const,
+  token_type: 'bearer',
   user: mockUser,
 };
 
 // Create mock implementation that returns fresh default values
 const createDefaultAuthReturn = () => ({
-  user: { ...mockUser },
-  session: { ...mockSession },
+  user: mockUser as User | null,
+  session: mockSession as Session | null,
   loading: false,
   signIn: vi.fn(),
   signUp: vi.fn(),
@@ -35,7 +36,7 @@ const createDefaultAuthReturn = () => ({
 });
 
 // Mock the AuthContext - using a function that returns a fresh object each time
-const mockUseAuth = vi.fn(createDefaultAuthReturn);
+const mockUseAuth = vi.fn(createDefaultAuthReturn) as Mock;
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
@@ -53,8 +54,8 @@ describe('Dashboard', () => {
 
   it('should render loading spinner while checking auth', () => {
     mockUseAuth.mockReturnValue({
-      user: null,
-      session: null,
+      user: null as User | null,
+      session: null as Session | null,
       loading: true,
       signIn: vi.fn(),
       signUp: vi.fn(),
@@ -252,8 +253,12 @@ describe('Dashboard', () => {
   });
 
   it('should use "User" as default display name when email is not available', () => {
+    const userWithoutEmail: User = {
+      ...mockUser,
+      email: undefined as unknown as string,
+    };
     mockUseAuth.mockReturnValue({
-      user: { ...mockUser, email: undefined },
+      user: userWithoutEmail,
       session: mockSession,
       loading: false,
       signIn: vi.fn(),
