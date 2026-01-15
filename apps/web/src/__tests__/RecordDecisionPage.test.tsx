@@ -3,6 +3,50 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import RecordDecisionPage from '../pages/RecordDecisionPage';
 
+// Mock the auth context
+const mockSession = {
+  access_token: 'mock-access-token',
+  refresh_token: 'mock-refresh-token',
+  expires_in: 3600,
+  expires_at: Date.now() / 1000 + 3600,
+  token_type: 'bearer' as const,
+  user: {
+    id: 'user-123',
+    email: 'test@example.com',
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+  },
+};
+
+vi.mock('../contexts/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    session: mockSession,
+    user: mockSession.user,
+    loading: false,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    signInWithGoogle: vi.fn(),
+  })),
+}));
+
+// Mock the useUploadAudio hook
+const mockUpload = vi.fn();
+const mockReset = vi.fn();
+vi.mock('../hooks/useUploadAudio', () => ({
+  useUploadAudio: vi.fn(() => ({
+    state: 'idle',
+    isUploading: false,
+    result: null,
+    error: null,
+    progress: null,
+    upload: mockUpload,
+    reset: mockReset,
+  })),
+}));
+
 // Mock ResizeObserver
 class MockResizeObserver {
   observe = vi.fn();
@@ -69,6 +113,11 @@ vi.mock('../components/audio', () => ({
 describe('RecordDecisionPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUpload.mockResolvedValue({
+      url: 'https://storage.example.com/audio/123.webm',
+      path: 'user-id/123.webm',
+      size: 12345,
+    });
     vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
@@ -323,11 +372,25 @@ describe('RecordDecisionPage', () => {
         expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
       });
     });
+
+    it('should reset upload state on retry', async () => {
+      renderPage();
+
+      fireEvent.click(screen.getByTestId('mock-record-button'));
+      await waitFor(() => {
+        expect(screen.getByTestId('preview-section')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByTestId('retry-button'));
+
+      await waitFor(() => {
+        expect(mockReset).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Continue functionality', () => {
-    it('should log continue action when clicked', async () => {
-      const consoleSpy = vi.spyOn(console, 'log');
+    it('should call upload function when clicked', async () => {
       renderPage();
 
       fireEvent.click(screen.getByTestId('mock-record-button'));
@@ -337,11 +400,9 @@ describe('RecordDecisionPage', () => {
 
       fireEvent.click(screen.getByTestId('continue-button'));
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Continue clicked with audio blob:',
-        expect.any(Number),
-        'bytes'
-      );
+      await waitFor(() => {
+        expect(mockUpload).toHaveBeenCalledWith(expect.any(Blob));
+      });
     });
   });
 

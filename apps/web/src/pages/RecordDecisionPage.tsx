@@ -14,11 +14,12 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { VoiceRecorder } from '../components/audio';
+import { useUploadAudio } from '../hooks/useUploadAudio';
 
 /**
  * Page states for the recording flow
  */
-type PageState = 'idle' | 'preview';
+type PageState = 'idle' | 'preview' | 'uploading';
 
 /**
  * Props for the preview action buttons
@@ -29,6 +30,7 @@ interface PreviewActionsProps {
   onRetry: () => void;
   onContinue: () => void;
   isPlaying: boolean;
+  isUploading: boolean;
 }
 
 /**
@@ -116,6 +118,35 @@ function ArrowRightIcon() {
 }
 
 /**
+ * Spinner icon for loading state
+ */
+function SpinnerIcon() {
+  return (
+    <svg
+      className="animate-spin w-5 h-5"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
+/**
  * Preview action buttons component
  * Shows audio player and buttons: Riascolta, Riprova, Continua
  */
@@ -125,6 +156,7 @@ function PreviewActions({
   onRetry,
   onContinue,
   isPlaying,
+  isUploading,
 }: PreviewActionsProps) {
   const buttonBaseClasses = [
     'px-5 py-3',
@@ -152,7 +184,8 @@ function PreviewActions({
         <button
           type="button"
           onClick={onReplay}
-          className={`${buttonBaseClasses} flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-400`}
+          disabled={isUploading}
+          className={`${buttonBaseClasses} flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed`}
           aria-label={isPlaying ? 'Metti in pausa' : 'Riascolta registrazione'}
           data-testid="replay-button"
         >
@@ -164,7 +197,8 @@ function PreviewActions({
         <button
           type="button"
           onClick={onRetry}
-          className={`${buttonBaseClasses} flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-400`}
+          disabled={isUploading}
+          className={`${buttonBaseClasses} flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed`}
           aria-label="Riprova registrazione"
           data-testid="retry-button"
         >
@@ -176,12 +210,22 @@ function PreviewActions({
         <button
           type="button"
           onClick={onContinue}
-          className={`${buttonBaseClasses} flex-1 bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500`}
-          aria-label="Continua al prossimo passo"
+          disabled={isUploading}
+          className={`${buttonBaseClasses} flex-1 bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed`}
+          aria-label={isUploading ? 'Caricamento in corso' : 'Continua al prossimo passo'}
           data-testid="continue-button"
         >
-          <span>Continua</span>
-          <ArrowRightIcon />
+          {isUploading ? (
+            <>
+              <SpinnerIcon />
+              <span>Caricamento...</span>
+            </>
+          ) : (
+            <>
+              <span>Continua</span>
+              <ArrowRightIcon />
+            </>
+          )}
         </button>
       </div>
     </div>
@@ -198,7 +242,7 @@ function PreviewActions({
  * - Preview state with Riascolta, Riprova, Continua buttons
  */
 export default function RecordDecisionPage() {
-  // Page state: idle (recording) or preview
+  // Page state: idle (recording), preview, or uploading
   const [pageState, setPageState] = useState<PageState>('idle');
 
   // Audio blob from recording
@@ -212,6 +256,9 @@ export default function RecordDecisionPage() {
 
   // Is audio currently playing
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Upload hook for audio upload
+  const { upload, isUploading, error: uploadError, reset: resetUpload } = useUploadAudio();
 
   /**
    * Handle recording completion from VoiceRecorder
@@ -260,20 +307,31 @@ export default function RecordDecisionPage() {
     setAudioUrl(null);
     setIsPlaying(false);
     setPageState('idle');
-  }, [audioUrl]);
+    resetUpload();
+  }, [audioUrl, resetUpload]);
 
   /**
    * Handle continue button click
-   * TODO: Navigate to next step (transcription/extraction)
+   * Uploads audio and will navigate to transcription step
    */
-  const handleContinue = useCallback(() => {
-    // Placeholder: will navigate to next step in future stories
-    // For now, just log the action
-    console.log('Continue clicked with audio blob:', audioBlob?.size, 'bytes');
+  const handleContinue = useCallback(async () => {
+    if (!audioBlob) {
+      return;
+    }
 
-    // TODO: Upload audio and navigate to transcription step
-    // This will be implemented in US-041
-  }, [audioBlob]);
+    setPageState('uploading');
+
+    try {
+      const response = await upload(audioBlob);
+      // TODO: Navigate to next step with response.url and response.path
+      // This will be implemented in US-048 (Step Trascrizione in Flow Recording)
+      console.log('Upload successful:', response);
+    } catch {
+      // Error is already set in upload hook state
+      // Stay on preview page so user can retry
+      setPageState('preview');
+    }
+  }, [audioBlob, upload]);
 
   /**
    * Handle audio ended event
@@ -337,7 +395,7 @@ export default function RecordDecisionPage() {
         )}
 
         {/* Preview state: Show audio preview and action buttons */}
-        {pageState === 'preview' && audioUrl && (
+        {(pageState === 'preview' || pageState === 'uploading') && audioUrl && (
           <>
             {/* Audio element for playback */}
             <audio
@@ -347,29 +405,59 @@ export default function RecordDecisionPage() {
               data-testid="audio-player"
             />
 
-            {/* Success message */}
+            {/* Success message or upload error */}
             <div className="text-center mb-8">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-8 h-8 text-green-600"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                Registrazione completata
-              </h2>
-              <p className="text-gray-500 text-sm">
-                Ascolta la tua registrazione o continua per analizzarla
-              </p>
+              {uploadError ? (
+                <>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-8 h-8 text-red-600"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg font-semibold text-red-900 mb-1">
+                    Errore di caricamento
+                  </h2>
+                  <p className="text-red-600 text-sm" role="alert" data-testid="upload-error">
+                    {uploadError}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="w-8 h-8 text-green-600"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                    {isUploading ? 'Caricamento in corso...' : 'Registrazione completata'}
+                  </h2>
+                  <p className="text-gray-500 text-sm">
+                    {isUploading
+                      ? 'Attendi il completamento del caricamento'
+                      : 'Ascolta la tua registrazione o continua per analizzarla'}
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Preview actions */}
@@ -379,6 +467,7 @@ export default function RecordDecisionPage() {
               onRetry={handleRetry}
               onContinue={handleContinue}
               isPlaying={isPlaying}
+              isUploading={isUploading}
             />
           </>
         )}
@@ -387,9 +476,9 @@ export default function RecordDecisionPage() {
       {/* Footer with tip */}
       <footer className="p-4 text-center">
         <p className="text-gray-400 text-xs">
-          {pageState === 'idle'
-            ? 'Durata massima: 5 minuti'
-            : 'Premi Continua per procedere con la trascrizione'}
+          {pageState === 'idle' && 'Durata massima: 5 minuti'}
+          {pageState === 'preview' && 'Premi Continua per procedere con la trascrizione'}
+          {pageState === 'uploading' && 'Caricamento audio in corso...'}
         </p>
       </footer>
     </div>
