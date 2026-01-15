@@ -25,7 +25,7 @@ export default function Dashboard() {
       // Navigation will happen via AuthGuard after session is cleared
     } catch (err) {
       const authError = err as AuthError;
-      setError(authError.message || 'Failed to sign out. Please try again.');
+      setError(authError.message || 'Errore durante il logout. Riprova.');
       setIsLoggingOut(false);
     }
   };
@@ -41,7 +41,7 @@ export default function Dashboard() {
           <h1 className="text-xl font-semibold text-gray-900">Decision Intelligence Journal</h1>
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-gray-600 sm:block">
-              Welcome, <span className="font-medium">{displayName}</span>
+              Ciao, <span className="font-medium">{displayName}</span>
             </span>
             <button
               type="button"
@@ -49,7 +49,7 @@ export default function Dashboard() {
               disabled={isLoggingOut}
               className="rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isLoggingOut ? <LoadingSpinner size="sm" /> : 'Sign out'}
+              {isLoggingOut ? <LoadingSpinner size="sm" /> : 'Esci'}
             </button>
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function Dashboard() {
         <div className="text-center">
           {/* Mobile-only welcome message */}
           <p className="mb-4 text-sm text-gray-600 sm:hidden">
-            Welcome, <span className="font-medium">{displayName}</span>
+            Ciao, <span className="font-medium">{displayName}</span>
           </p>
 
           <div className="mb-6">
