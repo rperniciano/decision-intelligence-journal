@@ -28,3 +28,21 @@ export * from './enums';
 
 // Re-export types from database module for convenience
 export * from './database';
+
+// Re-export types from decision module
+export * from './decision';
+
+// Re-export types from decision-option module
+export * from './decision-option';
+
+// Re-export types from option-pro-con module
+export * from './option-pro-con';
+
+// Re-export types from decision-outcome module
+export * from './decision-outcome';
+
+// Re-export types from followup-reminder module
+export * from './followup-reminder';
+
+// Re-export types from api module
+export * from './api';
