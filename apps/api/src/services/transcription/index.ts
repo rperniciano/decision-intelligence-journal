@@ -2,8 +2,8 @@
  * Transcription service module
  *
  * Provides an interface for transcribing audio files.
- * Uses MockTranscriptionService in development or when ASSEMBLYAI_API_KEY is not set.
- * Uses AssemblyAITranscriptionService in production (when implemented).
+ * Uses MockTranscriptionService in development/test or when ASSEMBLYAI_API_KEY is not set.
+ * Uses AssemblyAITranscriptionService in production when ASSEMBLYAI_API_KEY is configured.
  */
 
 export type {
@@ -13,9 +13,15 @@ export type {
 } from './types';
 
 export { MockTranscriptionService, DEFAULT_MOCK_TEXT } from './mock';
+export {
+  AssemblyAITranscriptionService,
+  AssemblyAITranscriptionError,
+  type AssemblyAITranscriptionServiceOptions,
+} from './assemblyai';
 
 import type { TranscriptionService } from './types';
 import { MockTranscriptionService } from './mock';
+import { AssemblyAITranscriptionService } from './assemblyai';
 
 /**
  * Singleton instance of the transcription service
@@ -25,7 +31,7 @@ let _transcriptionService: TranscriptionService | null = null;
 /**
  * Get or create the transcription service instance.
  *
- * Returns MockTranscriptionService in development or when ASSEMBLYAI_API_KEY is not set.
+ * Returns MockTranscriptionService in development/test or when ASSEMBLYAI_API_KEY is not set.
  * Returns AssemblyAITranscriptionService in production when ASSEMBLYAI_API_KEY is configured.
  *
  * @returns TranscriptionService instance
@@ -37,15 +43,20 @@ export function getTranscriptionService(): TranscriptionService {
 
     // Use mock service if:
     // 1. No API key is set, OR
-    // 2. Running in development/test mode
-    const useMock = !assemblyAiKey || nodeEnv === 'test' || nodeEnv === 'development';
+    // 2. Running in test mode (unit tests should not hit real API)
+    const useMock = !assemblyAiKey || nodeEnv === 'test';
 
     if (useMock) {
       _transcriptionService = new MockTranscriptionService();
     } else {
-      // Real AssemblyAI service will be implemented in US-044
-      // For now, fall back to mock
-      _transcriptionService = new MockTranscriptionService();
+      // Use real AssemblyAI service in production/development with API key
+      _transcriptionService = new AssemblyAITranscriptionService({
+        apiKey: assemblyAiKey,
+        languageCode: 'it', // Italian language support
+        pollingTimeout: 300000, // 5 minutes max
+        pollingInterval: 3000, // Poll every 3 seconds
+        maxRetries: 3, // Retry up to 3 times on transient errors
+      });
     }
   }
 
