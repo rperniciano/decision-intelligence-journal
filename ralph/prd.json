@@ -796,8 +796,8 @@
         "Test integrazione (skip in CI se no API key)"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented AssemblyAITranscriptionService with SDK v4, 5min timeout, 3 retries with exponential backoff, error classification. 54 unit tests."
     },
     {
       "id": "US-045",

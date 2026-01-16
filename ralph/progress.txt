@@ -1461,3 +1461,38 @@ Iteration: 1
   - TranscriptionWord timing is sequential: each word starts after previous ends
   - Mock delay is configurable for fast tests ({ delayMs: 0 })
 ---
+## 01/16/2026 - US-044
+Iteration: 1
+- What was implemented:
+  - Created AssemblyAITranscriptionService in src/services/transcription/assemblyai.ts
+  - Uses AssemblyAI SDK v4 (assemblyai package already installed)
+  - Flow: client.transcripts.transcribe() with audio_url, polls until completed/error
+  - Timeout handling: pollingTimeout (default 5 minutes = 300000ms), pollingInterval (3s)
+  - Retry logic: maxRetries (default 3) with exponential backoff (1s, 2s, 4s)
+  - Retryable errors: network, timeout, rate limit (429), server errors (500, 502, 503, 504)
+  - Non-retryable errors: auth (401), bad request (400), transcription errors
+  - Error classification via AssemblyAITranscriptionError with code and retryable flag
+  - Maps Assembly.AI response to TranscriptionResult: text, confidence (avg of words), words[]
+  - Italian language code ('it') as default, configurable via options
+  - Factory updated: uses real service in development/production when ASSEMBLYAI_API_KEY set
+  - Test mode (NODE_ENV=test) always uses MockTranscriptionService
+  - 54 unit tests with vi.hoisted() mock pattern for AssemblyAI SDK
+    - Constructor tests (API key, options)
+    - Transcribe tests (result mapping, word confidence, null handling)
+    - Retry logic tests (network, timeout, rate limit, server errors)
+    - Non-retry tests (auth, bad request errors)
+    - Error classification tests (code and retryable flag)
+    - Integration tests (factory returns correct service type by environment)
+- Files changed:
+  - apps/api/src/services/transcription/assemblyai.ts (new)
+  - apps/api/src/services/transcription/index.ts (modified)
+  - apps/api/src/__tests__/transcription.test.ts (modified)
+- **Learnings for future iterations:**
+  - vi.mock() is hoisted to top of file; use vi.hoisted() for mock variables that need to be shared
+  - AssemblyAI SDK v4 transcribe() method handles polling internally, accepts pollingInterval/pollingTimeout
+  - Transcript.words is nullable/undefined - always handle with ?? []
+  - Transcript.text is nullable - handle with ?? ''
+  - Error classification: check message.toLowerCase().includes() for patterns
+  - Exponential backoff: baseDelay * Math.pow(2, attempt - 1)
+  - Test mocks need mockImplementation(function () { return ... }) for constructor behavior
+---
