@@ -1496,3 +1496,45 @@ Iteration: 1
   - Exponential backoff: baseDelay * Math.pow(2, attempt - 1)
   - Test mocks need mockImplementation(function () { return ... }) for constructor behavior
 ---
+
+## 01/16/2026 - US-045
+Iteration: 1
+- What was implemented:
+  - Created POST /api/transcription endpoint in apps/api/src/routes/transcription.ts
+  - Endpoint is protected by JWT authentication (fastify.authenticate preHandler)
+  - Accepts { audioUrl?: string, audioPath?: string } in request body
+  - Validates that at least one of audioUrl or audioPath is provided (400 error)
+  - Audio ownership validation:
+    - For audioPath: checks that path starts with user's ID (format: {user_id}/{filename})
+    - For audioUrl from our storage: extracts path from URL and validates ownership
+    - External URLs allowed without ownership check
+  - Returns 403 Forbidden if audio doesn't belong to the authenticated user
+  - Converts audioPath to public URL via Supabase storage.getPublicUrl()
+  - Calls TranscriptionService.transcribe() with final audio URL
+  - Returns { text, confidence } response (200 OK)
+  - Handles transcription service errors:
+    - AssemblyAITranscriptionError: 502 with code and retryable flag in details
+    - Generic Error: 502 with error message
+    - Non-Error thrown: 502 with "Unknown transcription error"
+  - Registered route in routes/index.ts with /api/transcription prefix
+  - Created comprehensive unit tests (17 tests) in transcription-route.test.ts:
+    - Successful transcription tests (audioPath, audioUrl from storage, external URL)
+    - Validation tests (400 for missing inputs, empty strings)
+    - Authorization tests (403 for wrong user, invalid path format)
+    - Authentication tests (401 for no token, invalid token)
+    - Error handling tests (502 for all error types)
+    - Service integration tests (correct URL generation, audioPath preference)
+    - Response format test (only text/confidence, no words)
+- Files changed:
+  - apps/api/src/routes/transcription.ts (new)
+  - apps/api/src/routes/index.ts (modified - added transcription routes)
+  - apps/api/src/__tests__/transcription-route.test.ts (new)
+- **Learnings for future iterations:**
+  - Audio paths in Supabase storage follow {user_id}/{filename} format
+  - Supabase storage URLs: /storage/v1/object/public/{bucket}/{path}
+  - Use URL.pathname.match() with regex to extract path from Supabase URLs
+  - decodeURIComponent() needed when extracting path from URL (spaces become %20)
+  - External URLs are allowed for transcription flexibility (no ownership check needed)
+  - PRD specifies response should only have text and confidence (not words)
+  - Mock AssemblyAITranscriptionError class in test file to avoid import issues
+---
