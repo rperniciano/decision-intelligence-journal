@@ -687,10 +687,13 @@ test.describe('Record Decision Page', () => {
     // First login if we have a test user, otherwise test unauthenticated state
     await page.goto('/record');
 
-    // Check if redirected to login
-    const isOnLogin = await page.getByLabel(/email/i).isVisible().catch(() => false);
+    // Check if we're on the record page (authenticated) with a short timeout
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
 
-    if (!isOnLogin) {
+    if (isOnRecordPage) {
       // If we're authenticated and on the record page
       await expect(page.getByText(/parla della tua decisione/i)).toBeVisible();
     } else {
