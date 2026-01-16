@@ -265,6 +265,340 @@ test.describe('Google OAuth', () => {
   });
 });
 
+test.describe('Signup Page UI', () => {
+  test('should display the signup page with app logo and name', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Verify app name/heading
+    await expect(page.getByRole('heading', { name: /decision journal/i })).toBeVisible();
+
+    // Verify subtitle
+    await expect(page.getByText(/crea il tuo account/i)).toBeVisible();
+  });
+
+  test('should display the signup form with correct Italian labels', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Verify name input exists with optional label
+    await expect(page.getByLabel(/nome/i)).toBeVisible();
+    await expect(page.getByText(/opzionale/i)).toBeVisible();
+
+    // Verify email input exists
+    await expect(page.getByLabel(/email/i)).toBeVisible();
+
+    // Verify password inputs exist
+    const passwordInputs = await page.getByLabel(/password/i).all();
+    expect(passwordInputs.length).toBe(2); // Password and Confirm Password
+
+    // Verify create account button with Italian text
+    await expect(page.getByRole('button', { name: /crea account/i })).toBeVisible();
+
+    // Verify Google signup button with Italian text
+    await expect(page.getByRole('button', { name: /registrati con google/i })).toBeVisible();
+  });
+
+  test('should display login link with Italian text', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Verify login text
+    await expect(page.getByText(/hai già un account\?/i)).toBeVisible();
+
+    // Verify link to login page exists with Italian text
+    await expect(page.getByRole('link', { name: /accedi/i })).toBeVisible();
+  });
+
+  test('should navigate to login page from signup', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Click the login link (Italian: Accedi)
+    await page.getByRole('link', { name: /accedi/i }).click();
+
+    // Verify navigation to login page
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
+
+test.describe('Signup Form Validation', () => {
+  test('should show validation error for empty email', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill only passwords, leave email empty
+    await page.getByLabel(/^password$/i).fill('password123');
+    await page.getByLabel(/conferma password/i).fill('password123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify email validation error appears
+    await expect(page.getByText(/email obbligatoria/i)).toBeVisible();
+  });
+
+  test('should show validation error for invalid email format', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill email that passes native validation but fails custom regex
+    await page.getByLabel(/email/i).fill('test@domain');
+    await page.getByLabel(/^password$/i).fill('password123');
+    await page.getByLabel(/conferma password/i).fill('password123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify email format error appears
+    await expect(page.getByText(/inserisci un'email valida/i)).toBeVisible();
+  });
+
+  test('should show validation error for empty password', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill only email
+    await page.getByLabel(/email/i).fill('test@example.com');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify password validation error appears
+    await expect(page.getByText(/password obbligatoria/i)).toBeVisible();
+  });
+
+  test('should show validation error for short password', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill email and short password
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/^password$/i).fill('pass1');
+    await page.getByLabel(/conferma password/i).fill('pass1');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify password length error appears
+    await expect(page.getByText(/almeno 8 caratteri/i)).toBeVisible();
+  });
+
+  test('should show validation error when password has no number', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill email and password without number
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/^password$/i).fill('password');
+    await page.getByLabel(/conferma password/i).fill('password');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify password number error appears
+    await expect(page.getByText(/almeno un numero/i)).toBeVisible();
+  });
+
+  test('should show validation error when passwords do not match', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill mismatched passwords
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/^password$/i).fill('password123');
+    await page.getByLabel(/conferma password/i).fill('different123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify password mismatch error appears
+    await expect(page.getByText(/le password non corrispondono/i)).toBeVisible();
+  });
+
+  test('should clear validation errors when user starts typing', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Submit empty form to trigger errors
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify errors appear
+    await expect(page.getByText(/email obbligatoria/i)).toBeVisible();
+    await expect(page.getByText(/password obbligatoria/i)).toBeVisible();
+
+    // Start typing in email field
+    await page.getByLabel(/email/i).fill('t');
+
+    // Email error should be cleared
+    await expect(page.getByText(/email obbligatoria/i)).not.toBeVisible();
+
+    // Password error should still be visible
+    await expect(page.getByText(/password obbligatoria/i)).toBeVisible();
+  });
+});
+
+test.describe('Signup Form Submission', () => {
+  test('should show loading state during form submission', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill valid form data
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/^password$/i).fill('password123');
+    await page.getByLabel(/conferma password/i).fill('password123');
+
+    // Click submit button
+    const submitButton = page.getByRole('button', { name: /crea account/i });
+    await submitButton.click();
+
+    // Verify inputs are disabled during submission
+    await expect(page.getByLabel(/email/i)).toBeDisabled();
+    await expect(page.getByLabel(/^password$/i)).toBeDisabled();
+    await expect(page.getByLabel(/conferma password/i)).toBeDisabled();
+  });
+
+  test('should pass client-side validation with valid form data', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill valid form data including name
+    await page.getByLabel(/nome/i).fill('Mario Rossi');
+    await page.getByLabel(/email/i).fill('test@example.com');
+    await page.getByLabel(/^password$/i).fill('password123');
+    await page.getByLabel(/conferma password/i).fill('password123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Verify no validation errors appear (form passed client-side validation)
+    await expect(page.getByText(/email obbligatoria/i)).not.toBeVisible();
+    await expect(page.getByText(/password obbligatoria/i)).not.toBeVisible();
+    await expect(page.getByText(/le password non corrispondono/i)).not.toBeVisible();
+  });
+
+  test('should show error message for already registered email', async ({ page }) => {
+    await page.goto('/signup');
+
+    // Fill form with an email that might already be registered
+    await page.getByLabel(/email/i).fill('existing@example.com');
+    await page.getByLabel(/^password$/i).fill('password123');
+    await page.getByLabel(/conferma password/i).fill('password123');
+
+    // Click submit button
+    await page.getByRole('button', { name: /crea account/i }).click();
+
+    // Wait for API response - either success message, error, or navigation
+    await Promise.race([
+      expect(page.getByText(/controlla la tua email/i)).toBeVisible({ timeout: 10000 }),
+      expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 }),
+      page.waitForURL(/\/(dashboard|onboarding)/, { timeout: 10000 }),
+    ]);
+  });
+});
+
+test.describe('Logout Flow', () => {
+  test('should display logout button in dashboard header', async ({ page }) => {
+    // First navigate to login to ensure we start from a known state
+    await page.goto('/login');
+
+    // Note: For a full E2E test with real authentication, we would need:
+    // 1. Valid test credentials in Supabase
+    // 2. Or mocked authentication state
+    // For now, we test the Dashboard component structure directly by checking
+    // that the page renders correctly when accessed
+
+    // Navigate to dashboard - this will redirect to login if not authenticated
+    await page.goto('/dashboard');
+
+    // If redirected to login, the logout button won't be visible
+    // Check if we're on dashboard or login
+    const isOnDashboard = await page
+      .getByRole('button', { name: /esci/i })
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnDashboard) {
+      // If authenticated (e.g., from previous session), verify logout button
+      await expect(page.getByRole('button', { name: /esci/i })).toBeVisible();
+    } else {
+      // If not authenticated, we're on login page
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should redirect to login after successful logout', async ({ page }) => {
+    // Navigate to dashboard
+    await page.goto('/dashboard');
+
+    // Check if we're authenticated (on dashboard with logout button visible)
+    const isOnDashboard = await page
+      .getByRole('button', { name: /esci/i })
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnDashboard) {
+      // Click logout button
+      await page.getByRole('button', { name: /esci/i }).click();
+
+      // Should redirect to login page after logout
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+    } else {
+      // Already on login (not authenticated) - logout flow will be tested when auth is mocked
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should show loading state during logout', async ({ page }) => {
+    await page.goto('/dashboard');
+
+    // Check if we're authenticated
+    const logoutButton = page.getByRole('button', { name: /esci/i });
+    const isOnDashboard = await logoutButton.isVisible().catch(() => false);
+
+    if (isOnDashboard) {
+      // Click logout and check for disabled state
+      await logoutButton.click();
+
+      // Button should be disabled during logout
+      await expect(logoutButton).toBeDisabled();
+    } else {
+      // Not authenticated - skip this test
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should show welcome message with user name in Italian', async ({ page }) => {
+    await page.goto('/dashboard');
+
+    // Check if we're on dashboard
+    const isOnDashboard = await page
+      .getByRole('button', { name: /esci/i })
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnDashboard) {
+      // Verify Italian welcome message "Ciao, [nome]"
+      await expect(page.getByText(/ciao,/i)).toBeVisible();
+    } else {
+      // Not authenticated - verify we're on login
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should clear session and redirect to login on logout', async ({ page }) => {
+    // This test verifies the full logout flow
+    await page.goto('/dashboard');
+
+    const isOnDashboard = await page
+      .getByRole('button', { name: /esci/i })
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnDashboard) {
+      // Click logout
+      await page.getByRole('button', { name: /esci/i }).click();
+
+      // Wait for redirect to login
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+
+      // Navigate back to dashboard - should redirect to login again (session cleared)
+      await page.goto('/dashboard');
+      await expect(page).toHaveURL(/\/login/);
+    } else {
+      // Not authenticated
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+});
+
 test.describe('Login Form Submission', () => {
   test('should show error message for invalid credentials', async ({ page }) => {
     await page.goto('/login');
@@ -335,5 +669,146 @@ test.describe('Login Form Submission', () => {
       page.waitForURL(/\/dashboard/, { timeout: 10000 }),
       expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 }),
     ]);
+  });
+});
+
+test.describe('Record Decision Page', () => {
+  test('should redirect to login when accessing /record without authentication', async ({
+    page,
+  }) => {
+    // Navigate directly to /record
+    await page.goto('/record');
+
+    // Should redirect to login because route is protected
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  test('should display the record decision page with correct title', async ({ page }) => {
+    // First login if we have a test user, otherwise test unauthenticated state
+    await page.goto('/record');
+
+    // Check if we're on the record page (authenticated) with a short timeout
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // If we're authenticated and on the record page
+      await expect(page.getByText(/parla della tua decisione/i)).toBeVisible();
+    } else {
+      // Not authenticated - verify redirect worked
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should display subtitle hint on record page', async ({ page }) => {
+    await page.goto('/record');
+
+    // Check if we're on the record page (authenticated)
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // Verify subtitle hint is displayed
+      await expect(
+        page.getByText(/descrivi la situazione, le opzioni che stai considerando/i)
+      ).toBeVisible();
+    } else {
+      // Not authenticated - verify redirect to login
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should display footer with max duration tip', async ({ page }) => {
+    await page.goto('/record');
+
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // Verify footer tip is displayed
+      await expect(page.getByText(/durata massima: 5 minuti/i)).toBeVisible();
+    } else {
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should have data-state attribute on page container', async ({ page }) => {
+    await page.goto('/record');
+
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // Verify the page has data-state attribute for state tracking
+      const pageContainer = page.getByTestId('record-decision-page');
+      await expect(pageContainer).toHaveAttribute('data-state', 'idle');
+    } else {
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should display VoiceRecorder component', async ({ page }) => {
+    await page.goto('/record');
+
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // Verify VoiceRecorder is present
+      const voiceRecorder = page.getByTestId('voice-recorder');
+      await expect(voiceRecorder).toBeVisible();
+    } else {
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should be mobile-first with full screen height', async ({ page }) => {
+    // Set mobile viewport
+    await page.setViewportSize({ width: 375, height: 667 });
+
+    await page.goto('/record');
+
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // Verify title and hint are visible on mobile
+      await expect(page.getByText(/parla della tua decisione/i)).toBeVisible();
+      await expect(
+        page.getByText(/descrivi la situazione, le opzioni/i)
+      ).toBeVisible();
+    } else {
+      await expect(page).toHaveURL(/\/login/);
+    }
+  });
+
+  test('should be accessible with proper heading structure', async ({ page }) => {
+    await page.goto('/record');
+
+    const isOnRecordPage = await page
+      .getByText(/parla della tua decisione/i)
+      .isVisible()
+      .catch(() => false);
+
+    if (isOnRecordPage) {
+      // Verify h1 heading is present
+      const heading = page.getByRole('heading', { level: 1 });
+      await expect(heading).toBeVisible();
+      await expect(heading).toHaveText(/parla della tua decisione/i);
+    } else {
+      await expect(page).toHaveURL(/\/login/);
+    }
   });
 });

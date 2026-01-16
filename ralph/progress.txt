@@ -807,3 +807,734 @@ Iteration: 25
   - displayName can be passed to Supabase via options.data in signUp call
   - Test patterns from Login.test.tsx can be reused/adapted for Signup.test.tsx
 ---
+
+
+## 01/15/2026 - US-026
+Iteration: 26
+- What was implemented:
+  - Verified all acceptance criteria were already met by US-025 implementation
+  - Signup page has complete validation: email format, password min 8 chars + number, password match
+  - Submit calls supabase.auth.signUp correctly with optional displayName
+  - Success shows "Controlla la tua email" message when email confirmation required
+  - Auto-redirect to /onboarding when email confirmation disabled (session returned)
+  - Error handling for "already registered" email and network errors
+  - E2E tests cover full registration flow (32 tests total in example.spec.ts)
+  - Unit tests: 27 Signup tests + 22 Login tests + 13 AuthContext tests = 62 total
+- Files changed:
+  - ralph/prd.json (marked US-026 as passes: true)
+  - ralph/progress.txt (this entry)
+- **Learnings for future iterations:**
+  - Sometimes stories are already complete from previous work - always verify before implementing
+  - US-025 (UI) and US-026 (functionality) were tightly coupled and implemented together
+  - Run full test suite (unit + E2E) to verify acceptance criteria before marking complete
+---
+
+
+## 01/15/2026 - US-027
+Iteration: 27
+- What was implemented:
+  - Verified POST /api/users/profile endpoint was already implemented in apps/api/src/routes/users.ts
+  - Endpoint accepts { displayName?: string } body, creates profile in DecisionsUserProfiles
+  - Returns 201 with ProfileResponse on success
+  - Returns 409 Conflict if profile already exists (checked via SELECT before INSERT)
+  - Handles race condition (unique constraint violation 23505) with 409 response
+  - Returns 500 for unexpected database errors with appropriate messages
+  - Created comprehensive unit test suite (10 tests) in apps/api/src/__tests__/users.test.ts:
+    - Test 201 with displayName
+    - Test 201 without displayName
+    - Test 409 from existing profile (select check)
+    - Test 409 from race condition (insert unique violation)
+    - Test 500 for select error
+    - Test 500 for insert error
+    - Test 401 without token
+    - Test 401 with invalid token
+    - Test empty body handling
+    - Test snake_case to camelCase field mapping
+  - Used vi.mock() to mock getSupabase() with chainable mock methods
+  - Verified DecisionsUserProfiles table structure via Supabase MCP
+  - Verified RLS policies (SELECT, INSERT, UPDATE) via Supabase MCP
+- Files changed:
+  - apps/api/src/__tests__/users.test.ts (new - 10 tests)
+  - ralph/prd.json (marked US-027 as passes: true)
+  - ralph/progress.txt (this entry)
+- **Learnings for future iterations:**
+  - The endpoint was already implemented in users.ts; only tests were needed
+  - Use vi.mock() before imports when mocking modules in Vitest
+  - Mock Supabase client with chainable methods: from() -> select()/insert() -> eq() -> single()
+  - PGRST116 is the Supabase error code for "no rows found" - not a real error
+  - 23505 is PostgreSQL unique constraint violation error code
+  - ProfileResponse uses camelCase (displayName, avatarUrl), DB uses snake_case (display_name, avatar_url)
+---
+
+
+## 01/15/2026 - US-028
+Iteration: 28
+- What was implemented:
+  - Added GET /api/users/profile endpoint in apps/api/src/routes/users.ts
+  - Endpoint is protected by fastify.authenticate preHandler
+  - Returns 200 with ProfileResponse when profile exists
+  - Returns 404 "Profile not found for this user" when profile doesn't exist (PGRST116)
+  - Returns 500 "Failed to fetch profile" for database errors
+  - Returns 401 Unauthorized for unauthenticated requests
+  - Response includes: id, displayName, avatarUrl, onboardingCompleted, createdAt, updatedAt
+  - Created 7 comprehensive unit tests in apps/api/src/__tests__/users.test.ts:
+    - Test 200 with profile when profile exists
+    - Test 200 when displayName and avatarUrl are null (optional fields)
+    - Test 404 when profile does not exist
+    - Test 500 when database query fails
+    - Test 401 when no token is provided
+    - Test 401 when invalid token is provided
+    - Test snake_case to camelCase field mapping
+- Files changed:
+  - apps/api/src/routes/users.ts (modified - added GET endpoint)
+  - apps/api/src/__tests__/users.test.ts (modified - added 7 tests)
+  - ralph/prd.json (marked US-028 as passes: true)
+- **Learnings for future iterations:**
+  - GET profile follows same pattern as POST profile: use Supabase client, handle PGRST116 for not found
+  - Response field mapping from snake_case DB columns to camelCase API response is standard
+  - Use `|| undefined` to convert null DB values to undefined in response (for optional fields)
+  - Test suite now has 17 tests for users endpoints (10 POST + 7 GET)
+---
+
+
+## 01/15/2026 - US-029
+Iteration: 29
+- What was implemented:
+  - Created ProtectedRoute component in apps/web/src/components/AuthGuard.tsx
+  - ProtectedRoute wraps children and redirects to /login when not authenticated
+  - Supports optional redirectTo prop for custom redirect paths
+  - Shows loading spinner while checking auth state (loading: true)
+  - Uses useAuth() hook from AuthContext
+  - Kept existing AuthGuard component for backward compatibility (uses Outlet pattern)
+  - Created comprehensive unit test suite (10 tests) in apps/web/src/__tests__/ProtectedRoute.test.tsx:
+    - Test loading state while auth is being checked
+    - Test redirect to /login when not authenticated
+    - Test redirect to custom path when redirectTo prop provided
+    - Test renders children when authenticated
+    - Test renders multiple children correctly
+    - Test uses useAuth hook correctly
+    - AuthGuard tests: loading state, redirect, render nested routes
+- Files changed:
+  - apps/web/src/components/AuthGuard.tsx (modified - added ProtectedRoute component)
+  - apps/web/src/__tests__/ProtectedRoute.test.tsx (new - 10 tests)
+  - ralph/prd.json (marked US-029 as passes: true)
+- **Learnings for future iterations:**
+  - AuthGuard already existed with Outlet pattern; ProtectedRoute is the children-wrapper pattern
+  - Both patterns are valid in React Router v6: Outlet for nested routes, children for direct wrapping
+  - Mock useAuth with vi.mock('../contexts/AuthContext') for ProtectedRoute tests
+  - Use MemoryRouter with initialEntries for testing route redirects
+  - useLocation() from react-router-dom is useful for verifying redirect paths in tests
+  - Total web unit tests: 76 (including 10 new ProtectedRoute tests)
+---
+
+
+## 01/15/2026 - US-030
+Iteration: 30
+- What was implemented:
+  - Updated Dashboard logout button text from "Sign out" to Italian "Esci"
+  - Updated welcome message from "Welcome, [name]" to Italian "Ciao, [name]"
+  - Updated error message to Italian "Errore durante il logout. Riprova."
+  - Created comprehensive unit test suite (13 tests) in apps/web/src/__tests__/Dashboard.test.tsx:
+    - Loading spinner while checking auth
+    - Dashboard header with app title
+    - Logout button with Italian text "Esci"
+    - Welcome message with user name in Italian
+    - User email in footer
+    - signOut called when logout button clicked
+    - Button disabled during logout
+    - Loading spinner in button during logout
+    - Error message on logout failure
+    - Default Italian error message when error has no message
+    - Re-enable button after logout error
+    - Display name extracted from email correctly
+    - "User" as default display name when email unavailable
+  - Added 5 E2E tests for logout flow in apps/e2e/tests/example.spec.ts:
+    - Display logout button in dashboard header
+    - Redirect to login after successful logout
+    - Loading state during logout
+    - Welcome message with user name in Italian
+    - Clear session and redirect to login on logout
+- Files changed:
+  - apps/web/src/pages/Dashboard.tsx (modified - Italian localization)
+  - apps/web/src/__tests__/Dashboard.test.tsx (new - 13 tests)
+  - apps/e2e/tests/example.spec.ts (modified - 5 new E2E tests)
+  - ralph/prd.json (marked US-030 as passes: true)
+- **Learnings for future iterations:**
+  - Dashboard already had logout functionality; main work was Italian localization and tests
+  - When mocking useAuth in vitest, use a factory function pattern to avoid hoisting issues
+  - Use mockUseAuth.mockReturnValue() to override default mock for specific tests
+  - Use getAllByText when text may appear multiple times (desktop + mobile views)
+  - Session type requires token_type: 'bearer' as const for literal type compatibility
+  - Total web unit tests: 89 (including 13 new Dashboard tests)
+  - Total E2E tests: 37 (including 5 new logout tests)
+---
+
+
+## 01/15/2026 - US-031
+Iteration: 1
+- What was implemented:
+  - Created Layout component (apps/web/src/components/Layout.tsx) with:
+    - Header with logo (lightbulb icon) and app name "Decision Journal"
+    - User avatar (from user_metadata.avatar_url) or initials fallback
+    - Desktop dropdown menu with Profilo, Impostazioni, Esci links
+    - Mobile hamburger menu with same options
+    - Sticky header on mobile
+    - Main content area with proper padding
+    - Error notification area for logout failures
+  - Created comprehensive unit tests (31 tests) in Layout.test.tsx:
+    - Rendering tests (logo, avatar, initials, display name)
+    - Desktop dropdown menu tests
+    - Mobile menu tests
+    - Logout functionality tests
+    - Navigation link tests
+    - Accessibility tests
+  - Fixed TypeScript errors in Dashboard.test.tsx (User/Session type annotations)
+- Files changed:
+  - apps/web/src/components/Layout.tsx (new)
+  - apps/web/src/__tests__/Layout.test.tsx (new)
+  - apps/web/src/__tests__/Dashboard.test.tsx (type fixes)
+- **Learnings for future iterations:**
+  - Layout component closes both desktop dropdown and mobile menu immediately on logout start (setIsMenuOpen(false), setIsMobileMenuOpen(false))
+  - User metadata accessed via user.user_metadata.display_name and user.user_metadata.avatar_url
+  - Testing-library role queries: use aria-label for buttons without text content
+  - Menu items in dropdown have role="menuitem", hamburger button needs descriptive aria-label
+---
+
+
+## 01/15/2026 - US-032
+Iteration: 1
+- What was implemented:
+  - Renamed useVoiceRecorder hook to useMediaRecorder (git mv preserves history)
+  - Added recordingTime as alias for duration per PRD specification
+  - Updated interface name to UseMediaRecorderReturn with comprehensive JSDoc docs
+  - Added backwards-compatible exports: useVoiceRecorder alias and UseVoiceRecorderReturn type
+  - Updated VoiceCapture.tsx to use new hook import
+  - Created comprehensive unit test suite (25 tests) in useMediaRecorder.test.ts:
+    - Initial state tests (all values at defaults, recordingTime alias works)
+    - startRecording tests (permission request, state reset, error handling)
+    - stopRecording tests (provides audioBlob, error for short recordings)
+    - pauseRecording/resumeRecording tests
+    - resetRecording tests (clears all state)
+    - Duration timer tests (increments, pauses correctly, alias works during recording)
+    - Max duration auto-stop test (300 seconds)
+    - MIME type support tests (webm preferred, mp4 fallback)
+    - Backwards compatibility tests (useVoiceRecorder alias)
+    - Cleanup tests (URL revocation, stream tracks)
+- Files changed:
+  - apps/web/src/hooks/useMediaRecorder.ts (renamed from useVoiceRecorder.ts)
+  - apps/web/src/__tests__/useMediaRecorder.test.ts (new)
+  - apps/web/src/pages/VoiceCapture.tsx (import updated)
+- **Learnings for future iterations:**
+  - Use globalThis cast to any (const g = globalThis as any) for mocking browser APIs in tests
+  - MockMediaRecorder needs ondataavailable, onstop, onerror handlers and state management
+  - vi.useFakeTimers() required for testing duration increments
+  - MediaRecorder.isTypeSupported() should be mocked as static method on class
+  - Hook already existed with full functionality - main work was renaming and adding alias
+  - Backwards compatibility via export const useVoiceRecorder = useMediaRecorder
+---
+
+## 01/16/2026 - US-033
+Iteration: 1
+- What was implemented:
+  - Created useAudioAnalyser hook in src/hooks/useAudioAnalyser.ts
+  - Hook accepts MediaStream via startAnalysing(stream) function
+  - Returns frequencyData (Uint8Array) and timeData (Uint8Array) for visualization
+  - Uses AudioContext + AnalyserNode from Web Audio API
+  - Updates data via requestAnimationFrame for smooth continuous updates
+  - Configurable options: fftSize (default 256), minDecibels, maxDecibels, smoothingTimeConstant
+  - Supports webkitAudioContext fallback for older browsers
+  - Proper cleanup on unmount: cancels animation frame, disconnects nodes, closes AudioContext
+  - Created comprehensive unit tests (27 tests) in useAudioAnalyser.test.ts:
+    - Initial state tests (empty arrays, correct sizes based on fftSize)
+    - startAnalysing tests (AudioContext creation, AnalyserNode setup, animation frame loop)
+    - Error handling tests (unsupported browser, initialization errors)
+    - stopAnalysing tests (cleanup, disconnect, close)
+    - Unmount cleanup tests
+    - Continuous update tests
+    - webkitAudioContext fallback test
+- Files changed:
+  - apps/web/src/hooks/useAudioAnalyser.ts (new)
+  - apps/web/src/__tests__/useAudioAnalyser.test.ts (new)
+- **Learnings for future iterations:**
+  - Web Audio API AnalyserNode.frequencyBinCount = fftSize / 2
+  - Use Uint8Array<ArrayBuffer> explicit type for Web Audio API compatibility with newer TypeScript
+  - To copy Uint8Array for React state, use new Uint8Array(length) + .set() instead of new Uint8Array(array)
+  - Mock AudioContext by tracking instances in an array rather than using vi.fn() as constructor
+  - AnalyserNode methods getByteFrequencyData/getByteTimeDomainData fill the provided array in-place
+  - webkitAudioContext is still needed for some older browsers
+---
+
+## 01/16/2026 - US-034
+Iteration: 1
+- What was implemented:
+  - Created WaveformVisualizer component in src/components/audio/WaveformVisualizer.tsx
+  - Canvas-based rendering with animated vertical bars
+  - Blue/purple gradient coloring using createLinearGradient (blue-500 -> indigo-500 -> violet-500)
+  - 60fps animation using requestAnimationFrame loop
+  - Responsive behavior using ResizeObserver to adapt to container size
+  - High DPI support via devicePixelRatio scaling
+  - Configurable props: barCount (32), minBarHeight (3), barGap (2), barRadius (2)
+  - Idle state shows bars at minimum height
+  - Active state animates bars proportional to frequency data
+  - Accessibility: aria-label and role="img" on canvas
+  - Created index.ts export file for audio components
+  - Created comprehensive unit test suite (30 tests) in WaveformVisualizer.test.tsx:
+    - Rendering tests (container, canvas, className, accessibility)
+    - Canvas drawing tests (context, gradient, bars)
+    - Animation tests (loop start/stop, frame continuation)
+    - Idle state tests (minimum height bars)
+    - Responsive behavior tests (ResizeObserver observe/disconnect)
+    - Configurable props tests
+    - High DPI support test
+    - Edge cases (empty data, large data, barCount variations)
+    - State transition tests
+- Files changed:
+  - apps/web/src/components/audio/WaveformVisualizer.tsx (new)
+  - apps/web/src/components/audio/index.ts (new)
+  - apps/web/src/__tests__/WaveformVisualizer.test.tsx (new)
+- **Learnings for future iterations:**
+  - Canvas rendering requires manual DPI scaling: multiply dimensions by devicePixelRatio
+  - Use ResizeObserver for responsive canvas components instead of window resize events
+  - Mock ResizeObserver by tracking instances in an array and calling their methods
+  - ctx.roundRect() is used for rounded corners in canvas (modern browsers)
+  - ESLint requires curly braces on all if statements (curly rule)
+  - Sample frequency data by averaging ranges for smoother bar visualization
+  - Animation loop: request new frame at end of draw if isActive
+---
+
+## 01/16/2026 - US-035
+Iteration: 1
+- What was implemented:
+  - Created RecordButton component in src/components/audio/RecordButton.tsx
+  - Props: onStart, onStop, isRecording, isDisabled, className
+  - 80px circular button (w-20 h-20 rounded-full) with microphone SVG icon
+  - Idle state: gray-100 background, gray-700 text, aria-label "Inizia registrazione"
+  - Recording state: red-500 background, white text, aria-label "Ferma registrazione"
+  - Pulse animation (animate-ping) with red-400 during recording
+  - Touch-friendly: 80px exceeds 44px minimum touch target
+  - Accessibility: aria-label, aria-pressed, focus:ring-4, focus:ring-offset-2
+  - Keyboard support: Enter and Space keys trigger action
+  - Disabled state: opacity-50, cursor-not-allowed, no pulse animation
+  - Updated audio/index.ts to export RecordButton and RecordButtonProps
+  - Created comprehensive unit test suite (43 tests) in RecordButton.test.tsx:
+    - Rendering tests (button, icon, type="button", className)
+    - Idle state tests (background, text color, aria-label, aria-pressed, no pulse)
+    - Recording state tests (red background, white text, aria-label, pulse animation)
+    - Click behavior tests (onStart/onStop called, disabled prevents calls)
+    - Keyboard accessibility tests (Enter, Space, other keys)
+    - Disabled state tests (disabled attr, cursor, opacity, no pulse)
+    - Size and styling tests (dimensions, rounded, focus ring, transitions)
+    - Microphone icon tests (aria-hidden, z-index, size)
+    - State transition tests (idle->recording, recording->idle, enable->disable)
+- Files changed:
+  - apps/web/src/components/audio/RecordButton.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+  - apps/web/src/__tests__/RecordButton.test.tsx (new)
+- **Learnings for future iterations:**
+  - Use animate-ping Tailwind class for pulse effect instead of custom CSS animation
+  - aria-pressed attribute is useful for toggle buttons to indicate current state
+  - Microphone icon uses two SVG paths: one for the mic body, one for the base/stand
+  - Button type="button" prevents unintended form submissions
+  - z-10 on icon ensures it appears above the pulse animation layer
+---
+
+## 01/16/2026 - US-036
+Iteration: 1
+- What was implemented:
+  - Created RecordingTimer component in src/components/audio/RecordingTimer.tsx
+  - Props: seconds, isActive, className, warningThreshold (default 300s = 5 min)
+  - MM:SS format display using formatTime() utility function
+  - Monospace font (font-mono tabular-nums) to prevent layout shift during counting
+  - Color states: gray-500 (idle), red-500 (active), orange-500 (warning after threshold)
+  - Accessibility: role="timer", aria-live="polite", aria-label with Italian description
+  - Export formatTime utility for potential reuse
+  - Updated audio/index.ts to export RecordingTimer, RecordingTimerProps, and formatTime
+  - Created comprehensive unit test suite (40 tests) in RecordingTimer.test.tsx:
+    - formatTime utility tests (0s, single/double digit seconds, minutes, edge cases)
+    - Rendering tests (container, format, accessibility attributes)
+    - Monospace font tests (font-mono, tabular-nums, text-2xl)
+    - Idle state tests (gray color, stays gray even above threshold)
+    - Active state tests (red color, stays red below threshold)
+    - Warning state tests (orange at exactly 300s, orange after 300s)
+    - Custom warningThreshold tests (lower and higher thresholds)
+    - State transition tests (idle->active, active->warning, warning->idle)
+    - Edge cases (large values, threshold=0)
+- Files changed:
+  - apps/web/src/components/audio/RecordingTimer.tsx (new)
+  - apps/web/src/__tests__/RecordingTimer.test.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+- **Learnings for future iterations:**
+  - Use tabular-nums CSS class for consistent digit width in timers (prevents layout shift)
+  - formatTime utility: Math.floor(seconds / 60) for minutes, seconds % 60 for remaining seconds
+  - padStart(2, '0') ensures double-digit format (00:00)
+  - aria-live="polite" allows screen readers to announce changes without interrupting
+  - role="timer" is appropriate semantic role for countdown/elapsed time displays
+  - Export utility functions separately for reuse (formatTime)
+---
+
+## 01/16/2026 - US-037
+Iteration: 1
+- What was implemented:
+  - Created VoiceRecorder composed component in src/components/audio/VoiceRecorder.tsx
+  - Combines RecordButton, RecordingTimer, and WaveformVisualizer sub-components
+  - Props: onRecordingComplete(blob), maxDuration (default 300s), className
+  - Implemented state machine with states: idle, requesting_permission, recording, stopped
+  - Exposed state via data-state attribute on container for testing/debugging
+  - Permission handling: requests microphone via navigator.mediaDevices.getUserMedia()
+  - Italian error messages for all error scenarios:
+    - "Permesso microfono negato" (permission denied)
+    - "Il tuo browser non supporta la registrazione audio" (unsupported)
+    - "Nessun microfono trovato" (no microphone)
+    - "Registrazione interrotta: durata massima raggiunta" (max duration)
+    - "Registrazione troppo breve" (too short)
+    - "Errore durante la registrazione" (generic error)
+  - Auto-stop when recordingTime >= maxDuration
+  - onRecordingComplete callback fires when audioBlob is available
+  - Integrates useMediaRecorder hook for recording and useAudioAnalyser for visualization
+  - Layout: flex column, centered, gap-6 spacing, max-w-md for visualizer
+  - Updated audio/index.ts to export VoiceRecorder, VoiceRecorderProps, VoiceRecorderState
+  - Created comprehensive unit test suite (40 tests) in VoiceRecorder.test.tsx:
+    - Rendering tests (container, button, timer, visualizer, className)
+    - State management tests (idle, recording, stopped states)
+    - Recording flow tests (start/stop, permission request, analyser integration)
+    - Callback tests (onRecordingComplete)
+    - MaxDuration tests (auto-stop, custom value)
+    - Error handling tests (all error types, accessibility)
+    - Button state tests (disabled when unsupported, recording state)
+    - Timer display tests (format, color states)
+    - Waveform tests (frequency data, active state)
+    - Cleanup tests (unmount)
+    - Layout tests (classes, spacing)
+  - Added mocks for ResizeObserver, canvas context, requestAnimationFrame in tests
+- Files changed:
+  - apps/web/src/components/audio/VoiceRecorder.tsx (new)
+  - apps/web/src/__tests__/VoiceRecorder.test.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+- **Learnings for future iterations:**
+  - VoiceRecorder needs its own MediaStream for the analyser (separate from useMediaRecorder)
+  - Use vi.stubGlobal() for mocking ResizeObserver and requestAnimationFrame
+  - Use vi.useRealTimers() in tests that involve real async operations (getUserMedia)
+  - Canvas and ResizeObserver mocks need to be at module scope before tests
+  - State machine can be exposed via data-state attribute for debugging
+  - Error messages should use || undefined pattern for null coalescing
+---
+
+## 01/16/2026 - US-038
+Iteration: 1
+- What was implemented:
+  - Created RecordDecisionPage component in apps/web/src/pages/RecordDecisionPage.tsx
+  - Italian UI text: Title "Parla della tua decisione", subtitle hint about describing situation/options
+  - Two page states: idle (shows VoiceRecorder) and preview (shows action buttons)
+  - Preview state with three buttons: Riascolta, Riprova, Continua
+  - Each button has Italian aria-labels for accessibility
+  - Success message "Registrazione completata" with green checkmark icon
+  - Mobile-first design: min-h-screen, flex column layout, centered content
+  - Footer tip: "Durata massima: 5 minuti" in idle, "Premi Continua per procedere" in preview
+  - Audio playback integration via hidden <audio> element
+  - Proper cleanup: URL.revokeObjectURL on retry and unmount
+  - Updated App.tsx route from VoiceCapture to RecordDecisionPage
+  - Created comprehensive unit tests (38 tests) covering:
+    - Rendering (page container, title, subtitle, footer, VoiceRecorder, data-state)
+    - Page structure (min-h-screen, bg-white, flex column, centered main)
+    - Recording flow (transition to preview, create object URL)
+    - Preview state UI (success message, buttons, audio element, footer)
+    - Preview actions (aria-labels, region label)
+    - Retry functionality (return to idle, revoke URL)
+    - Continue functionality (placeholder log)
+    - Button styling (gray/blue backgrounds, min-h-[48px])
+    - Cleanup (revoke URL on unmount)
+    - Accessibility (main landmark, heading structure, button types)
+  - Added 8 E2E tests for record page navigation and rendering
+- Files changed:
+  - apps/web/src/pages/RecordDecisionPage.tsx (new)
+  - apps/web/src/__tests__/RecordDecisionPage.test.tsx (new)
+  - apps/web/src/App.tsx (modified - use RecordDecisionPage)
+  - apps/e2e/tests/example.spec.ts (modified - added 8 E2E tests)
+- **Learnings for future iterations:**
+  - RecordDecisionPage replaces VoiceCapture for the PRD-specified UI
+  - VoiceCapture.tsx still exists but is no longer used in routes
+  - Preview buttons use Italian text: Riascolta, Riprova, Continua
+  - Mock VoiceRecorder component in tests to simplify and isolate page logic
+  - Use data-state attribute on page container for state tracking and testing
+  - E2E tests check for authentication state before testing page-specific elements
+  - Console.log placeholder in continue handler triggers lint warning (acceptable for placeholder)
+---
+
+## 01/16/2026 - US-039
+Iteration: 1
+- What was implemented:
+  - Created AudioPlayer component in src/components/audio/AudioPlayer.tsx
+  - Props: src (URL string or Blob), onEnded callback, className
+  - Play/pause toggle button with blue styling (bg-blue-500)
+  - Progress bar with click-to-seek functionality
+  - Progress thumb indicator that follows playback position
+  - Time display: current time / total duration (MM:SS format)
+  - formatDuration utility function for time formatting
+  - Italian aria-labels: "Lettore audio", "Riproduci", "Pausa", "Progresso audio"
+  - Keyboard accessibility:
+    - Enter/Space on play button toggles play/pause
+    - ArrowLeft/Right on progress bar skips ±5 seconds
+  - Works with both URL strings and Blob objects (creates/revokes object URLs)
+  - Disabled state before audio metadata loads
+  - Resets to beginning when audio ends
+  - Created comprehensive unit tests (53 tests) in AudioPlayer.test.tsx:
+    - formatDuration utility tests (6 tests)
+    - Rendering tests (7 tests)
+    - Audio source handling tests (3 tests)
+    - Play/Pause button tests (9 tests)
+    - Keyboard accessibility tests (4 tests)
+    - Progress bar tests (5 tests)
+    - Seek functionality tests (3 tests)
+    - Progress bar keyboard tests (5 tests)
+    - Time display tests (6 tests)
+    - Playback events tests (3 tests)
+    - Styling tests (4 tests)
+    - Edge cases tests (3 tests)
+  - Updated audio/index.ts to export AudioPlayer, AudioPlayerProps, formatDuration
+- Files changed:
+  - apps/web/src/components/audio/AudioPlayer.tsx (new)
+  - apps/web/src/__tests__/AudioPlayer.test.tsx (new)
+  - apps/web/src/components/audio/index.ts (modified)
+- **Learnings for future iterations:**
+  - HTMLAudioElement events: loadedmetadata, timeupdate, play, pause, ended
+  - Use Object.defineProperty to mock audio.duration and audio.currentTime in tests
+  - Progress bar seeks via: (clickX - rect.left) / rect.width * duration
+  - Keyboard seek skips 5 seconds (configurable amount)
+  - formatDuration rounds down (Math.floor) for clean display
+  - Blob sources need URL.createObjectURL and cleanup via URL.revokeObjectURL
+  - Audio preload="metadata" loads duration without full audio download
+---
+
+## 01/16/2026 - US-040
+Iteration: 1
+- What was implemented:
+  - Created POST /api/audio/upload endpoint in apps/api/src/routes/audio.ts
+  - Endpoint is protected by JWT authentication (fastify.authenticate preHandler)
+  - Accepts multipart/form-data with 'audio' field
+  - Validates MIME type: audio/webm, audio/mp4, audio/mpeg, audio/wav, audio/x-wav, audio/wave
+  - Validates file size: max 10MB (10485760 bytes)
+  - Streaming validation: rejects files during stream if they exceed limit (early abort)
+  - Also handles busboy truncated flag for server-side limits
+  - Uploads to Supabase Storage bucket 'decision-audio'
+  - Path format: {user_id}/{uuid}.{extension} (e.g., 123e4567-e89b-12d3-a456-426614174000/abc123.webm)
+  - Extension is derived from MIME type via getExtensionFromMimeType helper
+  - Returns AudioUploadResponse: { url: string, path: string, size: number }
+  - Error responses: 400 (no file), 413 (too large), 415 (wrong type), 500 (storage error)
+  - Registered route in apps/api/src/routes/index.ts with /api/audio prefix
+  - @fastify/multipart was already installed and configured (50MB server limit, 10MB endpoint limit)
+  - Created comprehensive unit test suite (15 tests) in audio.test.ts:
+    - Successful upload tests (webm, mp4, wav formats)
+    - Extension mapping tests
+    - 400 error test (no file)
+    - 415 error tests (text/plain, image/png)
+    - 413 error test (file > 10MB)
+    - 500 error test (storage failure)
+    - 401 error tests (no token, invalid token)
+    - User-specific path verification
+    - Content type verification in upload options
+    - File size in response verification
+- Files changed:
+  - apps/api/src/routes/audio.ts (new)
+  - apps/api/src/__tests__/audio.test.ts (new)
+  - apps/api/src/routes/index.ts (modified - register audio routes)
+- **Learnings for future iterations:**
+  - @fastify/multipart was already installed; just needed to create the route
+  - Use request.file() to get single uploaded file in multipart request
+  - Stream file chunks to buffer while checking size limit for early abort
+  - Check file.file.truncated for busboy's file size limit detection
+  - Mock crypto.randomUUID with vi.mock('crypto', ...) for predictable test paths
+  - Create multipart payloads manually with boundary string for app.inject tests
+  - Supabase storage.from().upload() returns { data: { path }, error }
+  - Supabase storage.from().getPublicUrl() returns { data: { publicUrl } }
+  - AudioUploadResponse type was already defined in @decisions/types/src/api.ts
+---
+
+## 01/16/2026 - US-041
+Iteration: 1
+- What was implemented:
+  - Created audioService in apps/web/src/services/audio.ts:
+    - uploadAudio(blob, accessToken) function for API communication
+    - AudioUploadError class with typed error codes
+    - Italian error messages for user-friendly display
+    - Validates: no file, file size (10MB), MIME types (webm, mp4, mpeg, wav)
+    - Handles HTTP errors: 401, 413, 415, 500
+  - Created useUploadAudio hook in apps/web/src/hooks/useUploadAudio.ts:
+    - States: idle, uploading, success, error
+    - Returns: state, isUploading, result, error, progress, upload, reset
+    - Gets access token from AuthContext session
+    - User-friendly Italian error messages
+  - Updated RecordDecisionPage.tsx:
+    - Added 'uploading' to PageState union
+    - Integrated useUploadAudio hook
+    - handleContinue calls upload() with audioBlob
+    - Added SpinnerIcon component for loading state
+    - Continue button shows spinner and "Caricamento..." during upload
+    - All buttons disabled during upload
+    - Error state shows red icon and Italian error message
+    - Footer text updates for each state
+  - Created comprehensive unit tests:
+    - audioService.test.ts: 19 tests for service functionality
+    - useUploadAudio.test.ts: 12 tests for hook behavior
+    - Updated RecordDecisionPage.test.tsx: mocked useAuth and useUploadAudio
+- Files changed:
+  - apps/web/src/services/audio.ts (new)
+  - apps/web/src/hooks/useUploadAudio.ts (new)
+  - apps/web/src/pages/RecordDecisionPage.tsx (modified)
+  - apps/web/src/__tests__/audioService.test.ts (new)
+  - apps/web/src/__tests__/useUploadAudio.test.ts (new)
+  - apps/web/src/__tests__/RecordDecisionPage.test.tsx (modified)
+- **Learnings for future iterations:**
+  - Components using useAuth() need AuthContext mocked in tests
+  - Use vi.mock() for hooks at module level before tests run
+  - FormData append with filename: formData.append('audio', blob, 'recording.webm')
+  - Session access token at session.access_token
+  - useCallback with async functions work correctly in React
+  - Italian error messages improve UX for target audience
+  - RecordDecisionPage now has 'uploading' state for visual feedback
+---
+
+## 01/16/2026 - US-042
+Iteration: 1
+- What was implemented:
+  - Created comprehensive E2E test file: apps/e2e/tests/recording.spec.ts (17 tests)
+  - Navigation tests: navigate to /record, redirect to login when unauthenticated
+  - Permission request tests: request permission on click, handle denied permission
+  - Recording UI tests: timer display, waveform visualizer, stop button
+  - Preview state tests: action buttons, success message, retry functionality
+  - Upload flow tests: trigger upload, loading spinner, disabled buttons during upload
+  - Error handling tests: handle upload error, allow retry after error
+  - Complete E2E flow test: full navigation -> record -> stop -> preview
+  - Fixed flaky test in example.spec.ts for Record Decision Page title check
+  - Created mock helpers for MediaRecorder, AudioContext, getUserMedia APIs
+  - Created mock helpers for upload success/failure API responses
+- Files changed:
+  - apps/e2e/tests/recording.spec.ts (new - 17 tests)
+  - apps/e2e/tests/example.spec.ts (modified - fixed flaky test)
+- **Learnings for future iterations:**
+  - Playwright E2E tests need mocked browser APIs (MediaRecorder, getUserMedia) for recording
+  - Use page.addInitScript() to inject mocks before page loads
+  - Use page.route() to mock API responses for upload success/failure
+  - Mock AudioContext with AnalyserNode for waveform visualization
+  - Create MockMediaStream class with getTracks/getAudioTracks methods
+  - MockMediaRecorder needs ondataavailable, onstop, onstart handlers
+  - Tests should handle both authenticated and unauthenticated states gracefully
+  - Use data-testid attributes for reliable element selection in E2E tests
+  - Use page.waitFor() with timeout and catch for flexible state detection
+---
+
+## 01/16/2026 - US-043
+Iteration: 1
+- What was implemented:
+  - Created TranscriptionService interface in apps/api/src/services/transcription/types.ts:
+    - transcribe(audioUrl): Promise<TranscriptionResult> method signature
+    - TranscriptionResult: { text, confidence, words }
+    - TranscriptionWord: { text, start, end, confidence }
+  - Created MockTranscriptionService in apps/api/src/services/transcription/mock.ts:
+    - Returns predefined Italian text about a job change decision
+    - Configurable delay (default 2-3 seconds random)
+    - Configurable mock text via constructor options
+    - Generates mock words with sequential timing and realistic confidence scores
+    - Exports DEFAULT_MOCK_TEXT for testing
+  - Created factory in apps/api/src/services/transcription/index.ts:
+    - getTranscriptionService() returns singleton instance
+    - Uses MockTranscriptionService when: no API key, test, or development env
+    - resetTranscriptionService() for test cleanup
+  - Created apps/api/src/services/index.ts to export all services
+  - Created comprehensive unit test suite (20 tests) in transcription.test.ts:
+    - Tests for TranscriptionResult structure
+    - Tests for word timing and confidence
+    - Tests for custom mock text
+    - Tests for delay simulation
+    - Tests for factory singleton behavior
+    - Tests for environment-based service selection
+- Files changed:
+  - apps/api/src/services/transcription/types.ts (new)
+  - apps/api/src/services/transcription/mock.ts (new)
+  - apps/api/src/services/transcription/index.ts (new)
+  - apps/api/src/services/index.ts (new)
+  - apps/api/src/__tests__/transcription.test.ts (new)
+- **Learnings for future iterations:**
+  - Services directory pattern: services/{service-name}/types.ts, mock.ts, index.ts
+  - Factory pattern with singleton for service instances
+  - Use vi.stubEnv() to test environment-based logic in Vitest
+  - Use vi.unstubAllEnvs() in afterEach to clean up environment stubs
+  - TranscriptionWord timing is sequential: each word starts after previous ends
+  - Mock delay is configurable for fast tests ({ delayMs: 0 })
+---
+## 01/16/2026 - US-044
+Iteration: 1
+- What was implemented:
+  - Created AssemblyAITranscriptionService in src/services/transcription/assemblyai.ts
+  - Uses AssemblyAI SDK v4 (assemblyai package already installed)
+  - Flow: client.transcripts.transcribe() with audio_url, polls until completed/error
+  - Timeout handling: pollingTimeout (default 5 minutes = 300000ms), pollingInterval (3s)
+  - Retry logic: maxRetries (default 3) with exponential backoff (1s, 2s, 4s)
+  - Retryable errors: network, timeout, rate limit (429), server errors (500, 502, 503, 504)
+  - Non-retryable errors: auth (401), bad request (400), transcription errors
+  - Error classification via AssemblyAITranscriptionError with code and retryable flag
+  - Maps Assembly.AI response to TranscriptionResult: text, confidence (avg of words), words[]
+  - Italian language code ('it') as default, configurable via options
+  - Factory updated: uses real service in development/production when ASSEMBLYAI_API_KEY set
+  - Test mode (NODE_ENV=test) always uses MockTranscriptionService
+  - 54 unit tests with vi.hoisted() mock pattern for AssemblyAI SDK
+    - Constructor tests (API key, options)
+    - Transcribe tests (result mapping, word confidence, null handling)
+    - Retry logic tests (network, timeout, rate limit, server errors)
+    - Non-retry tests (auth, bad request errors)
+    - Error classification tests (code and retryable flag)
+    - Integration tests (factory returns correct service type by environment)
+- Files changed:
+  - apps/api/src/services/transcription/assemblyai.ts (new)
+  - apps/api/src/services/transcription/index.ts (modified)
+  - apps/api/src/__tests__/transcription.test.ts (modified)
+- **Learnings for future iterations:**
+  - vi.mock() is hoisted to top of file; use vi.hoisted() for mock variables that need to be shared
+  - AssemblyAI SDK v4 transcribe() method handles polling internally, accepts pollingInterval/pollingTimeout
+  - Transcript.words is nullable/undefined - always handle with ?? []
+  - Transcript.text is nullable - handle with ?? ''
+  - Error classification: check message.toLowerCase().includes() for patterns
+  - Exponential backoff: baseDelay * Math.pow(2, attempt - 1)
+  - Test mocks need mockImplementation(function () { return ... }) for constructor behavior
+---
+
+## 01/16/2026 - US-045
+Iteration: 1
+- What was implemented:
+  - Created POST /api/transcription endpoint in apps/api/src/routes/transcription.ts
+  - Endpoint is protected by JWT authentication (fastify.authenticate preHandler)
+  - Accepts { audioUrl?: string, audioPath?: string } in request body
+  - Validates that at least one of audioUrl or audioPath is provided (400 error)
+  - Audio ownership validation:
+    - For audioPath: checks that path starts with user's ID (format: {user_id}/{filename})
+    - For audioUrl from our storage: extracts path from URL and validates ownership
+    - External URLs allowed without ownership check
+  - Returns 403 Forbidden if audio doesn't belong to the authenticated user
+  - Converts audioPath to public URL via Supabase storage.getPublicUrl()
+  - Calls TranscriptionService.transcribe() with final audio URL
+  - Returns { text, confidence } response (200 OK)
+  - Handles transcription service errors:
+    - AssemblyAITranscriptionError: 502 with code and retryable flag in details
+    - Generic Error: 502 with error message
+    - Non-Error thrown: 502 with "Unknown transcription error"
+  - Registered route in routes/index.ts with /api/transcription prefix
+  - Created comprehensive unit tests (17 tests) in transcription-route.test.ts:
+    - Successful transcription tests (audioPath, audioUrl from storage, external URL)
+    - Validation tests (400 for missing inputs, empty strings)
+    - Authorization tests (403 for wrong user, invalid path format)
+    - Authentication tests (401 for no token, invalid token)
+    - Error handling tests (502 for all error types)
+    - Service integration tests (correct URL generation, audioPath preference)
+    - Response format test (only text/confidence, no words)
+- Files changed:
+  - apps/api/src/routes/transcription.ts (new)
+  - apps/api/src/routes/index.ts (modified - added transcription routes)
+  - apps/api/src/__tests__/transcription-route.test.ts (new)
+- **Learnings for future iterations:**
+  - Audio paths in Supabase storage follow {user_id}/{filename} format
+  - Supabase storage URLs: /storage/v1/object/public/{bucket}/{path}
+  - Use URL.pathname.match() with regex to extract path from Supabase URLs
+  - decodeURIComponent() needed when extracting path from URL (spaces become %20)
+  - External URLs are allowed for transcription flexibility (no ownership check needed)
+  - PRD specifies response should only have text and confidence (not words)
+  - Mock AssemblyAITranscriptionError class in test file to avoid import issues
+---

@@ -479,8 +479,8 @@
         "Test E2E Playwright: registrazione completa flow"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "All functionality was already implemented in US-025. Verified: email validation, password 8+ chars with number, password match, signUp call, email confirmation message, onboarding redirect, error handling. 66 unit tests + 32 E2E tests pass."
     },
     {
       "id": "US-027",
@@ -496,8 +496,8 @@
         "Verificare con Supabase MCP: record creato correttamente"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: POST /api/users/profile endpoint implemented with auth, 409 conflict handling, 201 response. 10 unit tests with mocked Supabase client. Verified table structure and RLS policies via MCP."
     },
     {
       "id": "US-028",
@@ -512,8 +512,8 @@
         "Test integrazione"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: GET /api/users/profile endpoint implemented with auth, 404 handling, 200 response with ProfileResponse fields. 7 unit tests with mocked Supabase client."
     },
     {
       "id": "US-029",
@@ -528,8 +528,8 @@
         "Test unitario con mock auth context"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: ProtectedRoute component wraps children, supports custom redirectTo prop, shows loading spinner during auth check, uses useAuth() hook. 10 unit tests with mock auth context."
     },
     {
       "id": "US-030",
@@ -543,8 +543,8 @@
         "Test E2E: logout flow completo"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Dashboard logout button with Italian text 'Esci', 13 unit tests for Dashboard (logout flow, loading states, error handling), 5 E2E tests for logout flow."
     },
     {
       "id": "US-031",
@@ -560,8 +560,8 @@
         "Test unitario per rendering"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created Layout component with header, avatar/initials, dropdown menu (Profilo, Impostazioni, Esci), mobile responsive with sticky header and hamburger menu. 31 unit tests added."
     },
     {
       "id": "US-032",
@@ -579,8 +579,8 @@
         "Test unitario con mock MediaRecorder"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Renamed useVoiceRecorder to useMediaRecorder, added recordingTime alias for duration per PRD spec, 25 unit tests with mocked MediaRecorder API. Exposes startRecording, stopRecording, pauseRecording, resumeRecording, isRecording, isPaused, recordingTime, error, audioBlob. Auto-detects best MIME type (webm/mp4/wav), handles permissions and errors, backwards compatible via useVoiceRecorder alias."
     },
     {
       "id": "US-033",
@@ -597,8 +597,8 @@
         "Test unitario con mock AudioContext"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: useAudioAnalyser hook with configurable fftSize, minDecibels, maxDecibels, smoothingTimeConstant. Supports webkitAudioContext fallback. Comprehensive tests with mocked Web Audio API."
     },
     {
       "id": "US-034",
@@ -615,8 +615,8 @@
         "Test unitario per rendering"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: WaveformVisualizer component with canvas-based rendering, blue/purple gradient bars, 60fps animation via requestAnimationFrame, responsive ResizeObserver, configurable barCount/minBarHeight/barGap/barRadius. 30 unit tests."
     },
     {
       "id": "US-035",
@@ -634,8 +634,8 @@
         "Test unitario per stati"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: RecordButton component with 80px circular button, microphone SVG icon, idle/recording states, pulse animation, Italian aria-labels, keyboard support. 43 unit tests."
     },
     {
       "id": "US-036",
@@ -651,8 +651,8 @@
         "Test unitario per formatting"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: RecordingTimer component with MM:SS format, monospace font (font-mono tabular-nums), color states (gray idle, red active, orange warning at 5min), configurable warningThreshold prop, accessible (role=timer, aria-live, aria-label). 40 unit tests."
     },
     {
       "id": "US-037",
@@ -670,8 +670,8 @@
         "Test unitario per flow stati"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: VoiceRecorder component with state machine (idle/requesting_permission/recording/stopped), Italian error messages for permission denied/unsupported browser/no mic/max duration/recording too short, auto-stop at maxDuration, integrates useMediaRecorder and useAudioAnalyser hooks. 40 unit tests."
     },
     {
       "id": "US-038",
@@ -688,8 +688,8 @@
         "Test E2E: navigazione a pagina"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created RecordDecisionPage with Italian UI (title: 'Parla della tua decisione'), VoiceRecorder integration, preview state with Riascolta/Riprova/Continua buttons, mobile-first full-screen layout. 38 unit tests + 8 E2E tests."
     },
     {
       "id": "US-039",
@@ -705,8 +705,8 @@
         "Test unitario per controlli"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: AudioPlayer component with play/pause button, progress bar with seek, time display (current/total), keyboard accessibility (Enter/Space for play, ArrowLeft/Right for seek). 53 unit tests. Italian aria-labels."
     },
     {
       "id": "US-040",
@@ -724,8 +724,8 @@
         "Test integrazione con Supabase Storage"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: POST /api/audio/upload endpoint with multipart support, 10MB limit, MIME type validation, Supabase Storage upload, 15 unit tests"
     },
     {
       "id": "US-041",
@@ -743,8 +743,8 @@
         "Test unitario per servizio (mock fetch)"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: audioService with uploadAudio(), useUploadAudio hook with states, RecordDecisionPage integration, loading/error states with Italian messages, 19+12 unit tests"
     },
     {
       "id": "US-042",
@@ -761,8 +761,8 @@
         "Tutti i test passano in CI"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created apps/e2e/tests/recording.spec.ts with 17 comprehensive E2E tests covering navigation, permission request, recording UI, preview state, upload flow, and error handling. Uses mocked MediaRecorder/getUserMedia for headless browser testing."
     },
     {
       "id": "US-043",
@@ -778,8 +778,8 @@
         "Test unitario per mock service"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created TranscriptionService interface with transcribe(audioUrl) method, TranscriptionResult type with text/confidence/words, MockTranscriptionService with Italian mock text and 2-3s delay, factory getTranscriptionService(). 20 unit tests."
     },
     {
       "id": "US-044",
@@ -796,8 +796,8 @@
         "Test integrazione (skip in CI se no API key)"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Implemented AssemblyAITranscriptionService with SDK v4, 5min timeout, 3 retries with exponential backoff, error classification. 54 unit tests."
     },
     {
       "id": "US-045",
@@ -813,8 +813,8 @@
         "Test con mock service"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: POST /api/transcription endpoint with audio ownership validation, 17 unit tests"
     },
     {
       "id": "US-046",

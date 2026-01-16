@@ -25,16 +25,18 @@ export interface RecordingError {
 }
 
 /**
- * Return type for useVoiceRecorder hook
+ * Return type for useMediaRecorder hook
  */
-export interface UseVoiceRecorderReturn {
+export interface UseMediaRecorderReturn {
   /** Whether recording is currently active */
   isRecording: boolean;
   /** Whether recording is paused */
   isPaused: boolean;
-  /** Current recording duration in seconds */
+  /** Current recording duration in seconds (alias: recordingTime) */
   duration: number;
-  /** Recorded audio as Blob */
+  /** Current recording time in seconds (alias for duration, per PRD spec) */
+  recordingTime: number;
+  /** Recorded audio as Blob (available after stopRecording) */
   audioBlob: Blob | null;
   /** Object URL for audio playback */
   audioUrl: string | null;
@@ -42,7 +44,7 @@ export interface UseVoiceRecorderReturn {
   error: RecordingError | null;
   /** Current microphone permission state */
   permissionState: PermissionState;
-  /** Start recording */
+  /** Start recording - requests microphone permission if needed */
   startRecording: () => Promise<void>;
   /** Stop recording */
   stopRecording: () => void;
@@ -53,6 +55,9 @@ export interface UseVoiceRecorderReturn {
   /** Reset to initial state */
   resetRecording: () => void;
 }
+
+/** @deprecated Use UseMediaRecorderReturn instead */
+export type UseVoiceRecorderReturn = UseMediaRecorderReturn;
 
 /** Maximum recording duration in seconds (5 minutes) */
 const MAX_DURATION_SECONDS = 300;
@@ -87,23 +92,34 @@ function isMediaRecorderSupported(): boolean {
 }
 
 /**
- * Custom hook for voice recording using MediaRecorder API
+ * Custom hook for audio recording using MediaRecorder API
  *
  * Manages recording state, permissions, and provides methods for
  * controlling the recording lifecycle.
  *
+ * Features:
+ * - Microphone permission request and error handling
+ * - Auto-detection of best supported MIME type (webm/mp4/wav)
+ * - Pause/resume support
+ * - Auto-stop at max duration (5 minutes)
+ * - Cleanup of media streams and object URLs
+ *
  * @example
  * ```tsx
- * const { isRecording, startRecording, stopRecording, audioUrl } = useVoiceRecorder();
+ * const { isRecording, startRecording, stopRecording, audioBlob, recordingTime } = useMediaRecorder();
  *
  * return (
- *   <button onClick={isRecording ? stopRecording : startRecording}>
- *     {isRecording ? 'Stop' : 'Record'}
- *   </button>
+ *   <div>
+ *     <p>Recording time: {recordingTime}s</p>
+ *     <button onClick={isRecording ? stopRecording : startRecording}>
+ *       {isRecording ? 'Stop' : 'Record'}
+ *     </button>
+ *     {audioBlob && <audio src={URL.createObjectURL(audioBlob)} controls />}
+ *   </div>
  * );
  * ```
  */
-export function useVoiceRecorder(): UseVoiceRecorderReturn {
+export function useMediaRecorder(): UseMediaRecorderReturn {
   // Recording state
   const [isRecording, setIsRecording] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -365,6 +381,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
     isRecording,
     isPaused,
     duration,
+    recordingTime: duration, // Alias for duration per PRD spec
     audioBlob,
     audioUrl,
     error,
@@ -376,3 +393,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
     resetRecording,
   };
 }
+
+/**
+ * @deprecated Use useMediaRecorder instead
+ * Alias for backwards compatibility
+ */
+export const useVoiceRecorder = useMediaRecorder;
