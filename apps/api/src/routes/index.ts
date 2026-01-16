@@ -3,6 +3,7 @@ import healthRoutes from './health';
 import decisionsRoutes from './decisions';
 import usersRoutes from './users';
 import audioRoutes from './audio';
+import transcriptionRoutes from './transcription';
 
 /**
  * Main routes plugin
@@ -23,9 +24,12 @@ async function routes(fastify: FastifyInstance, _opts: FastifyPluginOptions): Pr
   // Register audio routes with /api/audio prefix
   await fastify.register(audioRoutes, { prefix: '/api/audio' });
 
+  // Register transcription routes with /api/transcription prefix
+  await fastify.register(transcriptionRoutes, { prefix: '/api/transcription' });
+
   // Future routes will be registered here:
   // await fastify.register(categoriesRoutes, { prefix: '/categories' });
 }
 
 export default routes;
-export { healthRoutes, decisionsRoutes, usersRoutes, audioRoutes };
+export { healthRoutes, decisionsRoutes, usersRoutes, audioRoutes, transcriptionRoutes };
