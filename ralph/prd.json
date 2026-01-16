@@ -761,8 +761,8 @@
         "Tutti i test passano in CI"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created apps/e2e/tests/recording.spec.ts with 17 comprehensive E2E tests covering navigation, permission request, recording UI, preview state, upload flow, and error handling. Uses mocked MediaRecorder/getUserMedia for headless browser testing."
     },
     {
       "id": "US-043",

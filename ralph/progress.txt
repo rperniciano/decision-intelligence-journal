@@ -1392,3 +1392,32 @@ Iteration: 1
   - Italian error messages improve UX for target audience
   - RecordDecisionPage now has 'uploading' state for visual feedback
 ---
+
+## 01/16/2026 - US-042
+Iteration: 1
+- What was implemented:
+  - Created comprehensive E2E test file: apps/e2e/tests/recording.spec.ts (17 tests)
+  - Navigation tests: navigate to /record, redirect to login when unauthenticated
+  - Permission request tests: request permission on click, handle denied permission
+  - Recording UI tests: timer display, waveform visualizer, stop button
+  - Preview state tests: action buttons, success message, retry functionality
+  - Upload flow tests: trigger upload, loading spinner, disabled buttons during upload
+  - Error handling tests: handle upload error, allow retry after error
+  - Complete E2E flow test: full navigation -> record -> stop -> preview
+  - Fixed flaky test in example.spec.ts for Record Decision Page title check
+  - Created mock helpers for MediaRecorder, AudioContext, getUserMedia APIs
+  - Created mock helpers for upload success/failure API responses
+- Files changed:
+  - apps/e2e/tests/recording.spec.ts (new - 17 tests)
+  - apps/e2e/tests/example.spec.ts (modified - fixed flaky test)
+- **Learnings for future iterations:**
+  - Playwright E2E tests need mocked browser APIs (MediaRecorder, getUserMedia) for recording
+  - Use page.addInitScript() to inject mocks before page loads
+  - Use page.route() to mock API responses for upload success/failure
+  - Mock AudioContext with AnalyserNode for waveform visualization
+  - Create MockMediaStream class with getTracks/getAudioTracks methods
+  - MockMediaRecorder needs ondataavailable, onstop, onstart handlers
+  - Tests should handle both authenticated and unauthenticated states gracefully
+  - Use data-testid attributes for reliable element selection in E2E tests
+  - Use page.waitFor() with timeout and catch for flexible state detection
+---
