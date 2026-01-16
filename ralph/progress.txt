@@ -1421,3 +1421,43 @@ Iteration: 1
   - Use data-testid attributes for reliable element selection in E2E tests
   - Use page.waitFor() with timeout and catch for flexible state detection
 ---
+
+## 01/16/2026 - US-043
+Iteration: 1
+- What was implemented:
+  - Created TranscriptionService interface in apps/api/src/services/transcription/types.ts:
+    - transcribe(audioUrl): Promise<TranscriptionResult> method signature
+    - TranscriptionResult: { text, confidence, words }
+    - TranscriptionWord: { text, start, end, confidence }
+  - Created MockTranscriptionService in apps/api/src/services/transcription/mock.ts:
+    - Returns predefined Italian text about a job change decision
+    - Configurable delay (default 2-3 seconds random)
+    - Configurable mock text via constructor options
+    - Generates mock words with sequential timing and realistic confidence scores
+    - Exports DEFAULT_MOCK_TEXT for testing
+  - Created factory in apps/api/src/services/transcription/index.ts:
+    - getTranscriptionService() returns singleton instance
+    - Uses MockTranscriptionService when: no API key, test, or development env
+    - resetTranscriptionService() for test cleanup
+  - Created apps/api/src/services/index.ts to export all services
+  - Created comprehensive unit test suite (20 tests) in transcription.test.ts:
+    - Tests for TranscriptionResult structure
+    - Tests for word timing and confidence
+    - Tests for custom mock text
+    - Tests for delay simulation
+    - Tests for factory singleton behavior
+    - Tests for environment-based service selection
+- Files changed:
+  - apps/api/src/services/transcription/types.ts (new)
+  - apps/api/src/services/transcription/mock.ts (new)
+  - apps/api/src/services/transcription/index.ts (new)
+  - apps/api/src/services/index.ts (new)
+  - apps/api/src/__tests__/transcription.test.ts (new)
+- **Learnings for future iterations:**
+  - Services directory pattern: services/{service-name}/types.ts, mock.ts, index.ts
+  - Factory pattern with singleton for service instances
+  - Use vi.stubEnv() to test environment-based logic in Vitest
+  - Use vi.unstubAllEnvs() in afterEach to clean up environment stubs
+  - TranscriptionWord timing is sequential: each word starts after previous ends
+  - Mock delay is configurable for fast tests ({ delayMs: 0 })
+---

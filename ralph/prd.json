@@ -778,8 +778,8 @@
         "Test unitario per mock service"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Completed: Created TranscriptionService interface with transcribe(audioUrl) method, TranscriptionResult type with text/confidence/words, MockTranscriptionService with Italian mock text and 2-3s delay, factory getTranscriptionService(). 20 unit tests."
     },
     {
       "id": "US-044",
